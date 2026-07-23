@@ -5,11 +5,11 @@ export default function RecentBidsFeed({ activity }) {
   if (!activity || activity.length === 0) {
     return (
         <div className="brutal bg-white p-8 h-full flex flex-col items-center justify-center min-h-[400px]">
-            <div className="w-20 h-20 rounded-full border-[3px] border-[var(--ink)] bg-[var(--background)] flex items-center justify-center mb-6">
-                <Activity className="text-[var(--ink)]/20" size={40} />
+            <div className="w-20 h-20 rounded-full border-[3px] border-[var(--ink)] bg-[var(--background)] flex items-center justify-center mb-6 shadow-[3px_3px_0_0_var(--ink)]">
+                <Activity className="text-[var(--ink)]/40" size={40} />
             </div>
-            <h3 className="font-display text-xl font-black uppercase tracking-tight opacity-40">Zero Static</h3>
-            <p className="text-sm font-medium opacity-40 max-w-[200px] text-center mt-2 leading-tight">Your frequency is clear. No live activity detected yet.</p>
+            <h3 className="font-display text-xl font-black uppercase tracking-tight text-[var(--ink)]/60">Zero Static</h3>
+            <p className="text-sm font-medium text-[var(--ink)]/50 max-w-[200px] text-center mt-2 leading-tight">No live activity detected yet.</p>
         </div>
     );
   }

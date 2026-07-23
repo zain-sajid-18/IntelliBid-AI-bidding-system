@@ -15,59 +15,35 @@ export default function LoginView() {
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // validation
   const validateForm = () => {
-    if (!form.email || !form.password) {
-      return "Email and password are required";
-    }
+    if (!form.email || !form.password) return "Email and password are required";
     return null;
   };
 
-  // submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
+    if (validationError) { setError(validationError); return; }
     setLoading(true);
-
     try {
       const data = await api("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-
       setUser(data.user);
-
-      const roleRoutes = {
-        buyer: "/dashboard",
-        seller: "/seller/dashboard",
-        admin: "/admin/dashboard",
-      };
-
+      const roleRoutes = { buyer: "/dashboard", seller: "/seller/dashboard", admin: "/admin/dashboard" };
       router.push(roleRoutes[data.user.role] || "/dashboard");
     } catch (err) {
       setError(err?.message || "Login failed");
@@ -83,15 +59,8 @@ export default function LoginView() {
         method: "POST",
         body: JSON.stringify({ idToken: credentialResponse.credential }),
       });
-
       setUser(data.user);
-      
-      const roleRoutes = {
-        buyer: "/dashboard",
-        seller: "/seller/dashboard",
-        admin: "/admin/dashboard",
-      };
-
+      const roleRoutes = { buyer: "/dashboard", seller: "/seller/dashboard", admin: "/admin/dashboard" };
       router.push(roleRoutes[data.user.role] || "/dashboard");
     } catch (err) {
       setError(err.message || "Google login failed");
@@ -101,103 +70,135 @@ export default function LoginView() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--ink)] overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--ink)] overflow-hidden grain">
       <LiquidCursor />
 
-      {/* Background */}
+      {/* Decorative Background Elements */}
       <motion.div
         animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
-        transition={{ duration: 8, repeat: Infinity }}
-        className="absolute left-[10%] top-[20%] h-40 w-40 rounded-full border bg-[var(--acid)]"
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute left-[10%] top-[20%] h-40 w-40 rounded-full border-[3px] border-[var(--ink)] bg-[var(--acid)] shadow-[var(--shadow-brutal)]"
       />
-
       <motion.div
         animate={{ y: [0, 30, 0], rotate: [0, -10, 0] }}
-        transition={{ duration: 10, repeat: Infinity }}
-        className="absolute right-[10%] bottom-[15%] h-32 w-32 border bg-[var(--electric)]"
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute right-[10%] bottom-[15%] h-32 w-32 border-[3px] border-[var(--ink)] bg-[var(--electric)] shadow-[var(--shadow-brutal)]"
       />
 
-      {/* Card */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 w-full max-w-md"
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 w-full max-w-md my-12"
       >
-        {/* Back */}
-        <Link href="/" className="text-sm font-bold flex items-center gap-2 mb-4">
-          <ArrowRight className="rotate-180 w-4 h-4" /> Back
-        </Link>
+        {/* Back link */}
+        <div className="absolute -top-10 left-0 md:-top-16">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 font-display text-sm font-bold uppercase hover:text-[var(--acid)] transition-colors"
+          >
+            <ArrowRight className="h-4 w-4 rotate-180" strokeWidth={3} /> Back to Home
+          </Link>
+        </div>
 
-        <div className="bg-white p-8 rounded-xl shadow-lg">
-          <h1 className="text-3xl font-bold text-center mb-2">
-            Welcome back
-          </h1>
-          <p className="text-center text-sm opacity-70 mb-6">
-            Login to continue
-          </p>
+        {/* Logo */}
+        <div className="mb-6 flex justify-center">
+          <Link
+            href="/"
+            className="flex h-16 w-16 items-center justify-center rounded-2xl border-[4px] border-[var(--ink)] bg-[var(--electric)] font-display text-2xl font-black text-white shadow-[var(--shadow-brutal)] transition-transform hover:-translate-y-1 hover:rotate-6"
+          >
+            IB
+          </Link>
+        </div>
+
+        {/* Card */}
+        <div className="brutal-lg overflow-hidden bg-white p-8 md:p-10">
+          <div className="mb-8 text-center">
+            <h1 className="font-display text-4xl font-black tracking-tighter">Welcome back.</h1>
+            <p className="mt-2 text-[var(--ink)]/70">Login to continue bidding.</p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Error */}
+            {error && (
+              <div className="rounded-xl border-[3px] border-red-500 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+                {error}
+              </div>
+            )}
 
             {/* Email */}
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 w-5 h-5 opacity-50" />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={form.email}
-                onChange={handleChange}
-                className="w-full border px-10 py-3 rounded-lg"
-                required
-              />
+            <div className="space-y-2">
+              <label className="font-display text-sm font-bold uppercase tracking-wide">Email</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                  <Mail className="h-5 w-5 text-[var(--ink)]/50" strokeWidth={2.5} />
+                </div>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  value={form.email}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border-[3px] border-[var(--ink)] bg-[var(--background)] px-12 py-3 font-medium transition-colors focus:bg-white focus:outline-none focus:ring-4 focus:ring-[var(--electric)]/30"
+                  required
+                />
+              </div>
             </div>
 
             {/* Password */}
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 w-5 h-5 opacity-50" />
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password"
-                value={form.password}
-                onChange={handleChange}
-                className="w-full border px-10 py-3 rounded-lg"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 opacity-50 hover:opacity-100 transition-opacity"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+            <div className="space-y-2">
+              <label className="font-display text-sm font-bold uppercase tracking-wide">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                  <Lock className="h-5 w-5 text-[var(--ink)]/50" strokeWidth={2.5} />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border-[3px] border-[var(--ink)] bg-[var(--background)] px-12 py-3 font-medium transition-colors focus:bg-white focus:outline-none focus:ring-4 focus:ring-[var(--electric)]/30"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-3 opacity-50 hover:opacity-100 transition-opacity"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
+            {/* Forgot password */}
             <div className="flex justify-end">
               <Link
                 href="/forgot-password"
-                className="text-xs font-bold uppercase opacity-50 hover:opacity-100 hover:text-[var(--hotpink)] transition-all"
+                className="font-display text-xs font-bold uppercase tracking-wide text-[var(--hotpink)] hover:underline decoration-2 underline-offset-4 transition-all"
               >
                 Forgot Password?
               </Link>
             </div>
 
-            {/* Error */}
-            {error && (
-              <p className="text-red-500 text-sm">{error}</p>
-            )}
-
-            {/* Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[var(--hotpink)] text-white py-3 rounded-lg font-bold"
+              className="group relative mt-2 flex w-full items-center justify-center gap-2 rounded-xl border-[3px] border-[var(--ink)] bg-[var(--hotpink)] px-6 py-4 font-display text-lg font-black uppercase text-white shadow-[var(--shadow-brutal)] transition-transform hover:-translate-y-1 active:translate-y-0 active:shadow-none disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? (
+                "Signing in..."
+              ) : (
+                <>
+                  Sign In{" "}
+                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" strokeWidth={3} />
+                </>
+              )}
             </button>
           </form>
 
-          <div className="my-6 flex items-center gap-2 text-sm opacity-40">
+          <div className="my-8 flex items-center gap-2 text-sm opacity-40">
             <div className="h-[1px] flex-1 bg-current" />
             OR
             <div className="h-[1px] flex-1 bg-current" />
@@ -212,13 +213,12 @@ export default function LoginView() {
             />
           </div>
 
-          {/* Footer */}
-          <p className="mt-6 text-center text-sm">
+          <div className="mt-8 text-center text-sm font-medium">
             New here?{" "}
-            <Link href="/register" className="underline font-semibold">
+            <Link href="/register" className="font-bold text-[var(--electric)] hover:underline decoration-2 underline-offset-4">
               Create account
             </Link>
-          </p>
+          </div>
         </div>
       </motion.div>
     </div>

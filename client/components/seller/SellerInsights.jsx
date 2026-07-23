@@ -52,7 +52,7 @@ export default function SellerInsights({ insights }) {
                   <h4 className="font-display text-xl font-black uppercase tracking-tight mb-2">
                     {insight.title}
                   </h4>
-                  <p className="text-base font-medium opacity-60 leading-relaxed max-w-xl">
+                  <p className="text-base font-medium text-[var(--ink)]/70 leading-relaxed max-w-xl">
                     {insight.description}
                   </p>
                 </div>

@@ -5,8 +5,11 @@ export default function SystemActivityLog({ activity }) {
   if (!activity || activity.length === 0) {
     return (
       <div className="bg-white border-[3px] border-[var(--ink)] rounded-2xl p-6 text-center shadow-[4px_4px_0_0_var(--ink)] h-full flex flex-col items-center justify-center min-h-[300px]">
-        <Activity className="text-gray-300 mb-4" size={48} />
-        <h3 className="font-display text-lg font-black uppercase tracking-tight text-gray-400">System Idle</h3>
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-[3px] border-[var(--ink)] bg-[var(--background)] shadow-[3px_3px_0_0_var(--ink)] mb-4">
+          <Activity className="text-[var(--ink)]/40" size={32} />
+        </div>
+        <h3 className="font-display text-lg font-black uppercase tracking-tight text-[var(--ink)]">System Idle</h3>
+        <p className="text-sm font-medium text-[var(--ink)]/60 mt-1">No activity recorded yet.</p>
       </div>
     );
   }

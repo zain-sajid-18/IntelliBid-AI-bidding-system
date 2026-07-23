@@ -72,8 +72,8 @@ export default function BidPanel() {
     };
 
     return (
-        <div className="brutal bg-[var(--electric)] text-white p-6 md:p-8 flex flex-col items-center text-center">
-            <h3 className="font-display text-sm font-black uppercase tracking-widest text-white/70 mb-2">Current Bid</h3>
+        <div className="brutal bg-[var(--electric)] text-black p-6 md:p-8 flex flex-col items-center text-center">
+            <h3 className="font-display text-sm font-black uppercase tracking-widest opacity-70 mb-2">Current Bid</h3>
             
             {/* Live Price Ticker */}
             <div className="relative font-display text-5xl md:text-6xl font-black drop-shadow-[4px_4px_0_var(--ink)] mb-1 tabular-nums">
@@ -84,7 +84,7 @@ export default function BidPanel() {
                 </span>
             </div>
             
-            <p className="text-sm font-bold text-white/80 mb-6">
+            <p className="text-sm font-bold opacity-80 mb-6">
                 {auction?.bidCount || 0} bids placed
             </p>
 
@@ -151,7 +151,7 @@ export default function BidPanel() {
                         {submittingBid ? <Loader2 className="animate-spin h-6 w-6" /> : <Gavel className="h-6 w-6" strokeWidth={3} />}
                         Place Bid
                     </button>
-                    <p className="text-xs font-bold text-white/60">Minimum next bid: ${minBid.toLocaleString()}</p>
+                    <p className="text-xs font-bold opacity-60">Minimum next bid: ${minBid.toLocaleString()}</p>
                 </form>
             )}
         </div>

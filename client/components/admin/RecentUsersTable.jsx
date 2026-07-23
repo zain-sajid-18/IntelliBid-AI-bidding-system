@@ -16,7 +16,7 @@ export default function RecentUsersTable({ users }) {
     switch(role) {
       case 'admin': return <span className="bg-[var(--ink)] text-white px-2 py-1 rounded text-xs font-black uppercase">Admin</span>;
       case 'seller': return <span className="bg-[var(--sunset)] text-white px-2 py-1 rounded text-xs font-black uppercase">Seller</span>;
-      default: return <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs font-black uppercase border-[1px] border-[var(--ink)]">Buyer</span>;
+      default: return <span className="bg-[var(--background)] text-[var(--ink)] px-2 py-1 rounded border-[2px] border-[var(--ink)] text-xs font-black uppercase">Buyer</span>;
     }
   };
 

@@ -129,8 +129,8 @@ export default function AuctionCard({ auction }) {
                     <div className="flex items-center justify-between bg-[var(--background)] border-[3px] border-[var(--ink)] p-4 rounded-2xl shadow-[4px_4px_0_0_var(--ink)]">
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-[0.1em] opacity-40 mb-1">Current Price</p>
-                            <p className="font-display text-3xl font-black text-[var(--acid)] drop-shadow-[2px_2px_0_var(--ink)]">
-                                ${auction.currentPrice.toLocaleString()}
+                            <p className="font-display text-3xl font-black text-[var(--ink)]">
+                                <span className="bg-[var(--acid)] px-2 py-0.5 rounded-lg">${auction.currentPrice.toLocaleString()}</span>
                             </p>
                         </div>
                         <div className="text-right">

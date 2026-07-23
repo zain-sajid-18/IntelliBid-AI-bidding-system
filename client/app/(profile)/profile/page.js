@@ -60,8 +60,10 @@ export default function ProfilePage() {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="animate-spin text-[var(--electric)]" size={48} />
-                    <p className="font-black uppercase tracking-widest text-xs opacity-40">Loading Profile...</p>
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-[3px] border-[var(--ink)] bg-[var(--electric)] text-white shadow-[4px_4px_0_0_var(--ink)] animate-pulse">
+                        <Loader2 className="animate-spin" size={28} />
+                    </div>
+                    <p className="font-black uppercase tracking-widest text-xs text-[var(--ink)]/50">Loading Profile...</p>
                 </div>
             </div>
         );

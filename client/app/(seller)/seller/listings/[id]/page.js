@@ -42,7 +42,7 @@ export default function SellerListingDetailPage() {
                 <p className="mt-2 font-medium opacity-60">{error || "This item may have been removed."}</p>
                 <button 
                     onClick={() => router.back()} 
-                    className="mt-6 rounded-xl border-[3px] border-[var(--ink)] bg-[var(--electric)] px-6 py-3 font-display text-sm font-black uppercase text-white shadow-[4px_4px_0_0_var(--ink)] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--ink)]"
+                    className="mt-6 rounded-xl border-[3px] border-[var(--ink)] bg-[var(--electric)] px-6 py-3 font-display text-sm font-black uppercase text-black shadow-[4px_4px_0_0_var(--ink)] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--ink)]"
                 >
                     Go Back
                 </button>
@@ -64,7 +64,7 @@ export default function SellerListingDetailPage() {
                         <ArrowLeft size={16} strokeWidth={3} /> Back to Products
                     </button>
                     <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1 text-xs font-bold uppercase rounded-lg border-[2px] border-[var(--ink)] ${auction.status === 'active' || auction.status === 'live' ? 'bg-[var(--acid)] text-[var(--ink)]' : auction.status === 'ended' ? 'bg-[var(--sunset)] text-white' : 'bg-gray-200 text-[var(--ink)]'}`}>
+                        <span className={`px-3 py-1 text-xs font-bold uppercase rounded-lg border-[2px] border-[var(--ink)] ${auction.status === 'active' || auction.status === 'live' ? 'bg-[var(--acid)] text-[var(--ink)]' : auction.status === 'ended' ? 'bg-[var(--sunset)] text-[var(--ink)]' : 'bg-[var(--muted)] text-[var(--ink)]'}`}>
                             {auction.status}
                         </span>
                     </div>
@@ -88,23 +88,32 @@ export default function SellerListingDetailPage() {
                         <ImageGallery images={auction.images} title={auction.title} />
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="brutal bg-white p-4">
-                                <div className="text-xs font-bold uppercase opacity-60 flex items-center gap-1"><Eye size={14} /> Views</div>
-                                <div className="text-2xl font-black mt-1">{auction.viewCount || 0}</div>
-                            </div>
-                            <div className="brutal bg-white p-4">
-                                <div className="text-xs font-bold uppercase opacity-60 flex items-center gap-1"><TrendingUp size={14} /> Total Bids</div>
-                                <div className="text-2xl font-black mt-1">{auction.bidCount || 0}</div>
-                            </div>
-                            <div className="brutal bg-white p-4 col-span-2">
-                                <div className="text-xs font-bold uppercase opacity-60 flex items-center gap-1"><Clock size={14} /> Ends At</div>
-                                <div className="text-lg font-black mt-1 truncate">{new Date(auction.endTime).toLocaleString()}</div>
-                            </div>
+                            {[
+                                { label: "Views", value: auction.viewCount || 0, icon: Eye, color: "var(--acid)" },
+                                { label: "Total Bids", value: auction.bidCount || 0, icon: TrendingUp, color: "var(--electric)" },
+                                { label: "Ends At", value: new Date(auction.endTime).toLocaleString(), icon: Clock, color: "var(--hotpink)", colSpan: 2 }
+                            ].map((stat, index) => {
+                                const Icon = stat.icon;
+                                const textColor = "var(--ink)"; // Use black text everywhere!
+                                return (
+                                    <motion.div
+                                        key={index}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05 }}
+                                        className={`brutal p-4 border-[3px] border-[var(--ink)] shadow-[4px_4px_0_0_var(--ink)] rounded-2xl ${stat.colSpan === 2 ? 'col-span-2' : ''}`}
+                                        style={{ background: stat.color, color: textColor }}
+                                    >
+                                        <div className="text-xs font-bold uppercase flex items-center gap-1" style={{ opacity: 0.8 }}><Icon size={14} /> {stat.label}</div>
+                                        <div className="text-2xl font-black mt-1">{stat.value}</div>
+                                    </motion.div>
+                                );
+                            })}
                         </div>
 
-                        <div className="brutal bg-white p-6 md:p-8">
+                        <div className="brutal p-6 md:p-8 border-[3px] border-[var(--ink)] shadow-[6px_6px_0_0 var(--ink)] rounded-2xl" style={{ background: "var(--sunset)", color: "var(--ink)" }}>
                             <h3 className="font-display text-lg font-black uppercase mb-4">Description</h3>
-                            <p className="whitespace-pre-wrap font-medium opacity-80 leading-relaxed">
+                            <p className="whitespace-pre-wrap font-medium opacity-90 leading-relaxed">
                                 {auction.description || "No description provided."}
                             </p>
                         </div>
@@ -118,25 +127,25 @@ export default function SellerListingDetailPage() {
                             {auction.type === 'live' ? <LiveBiddingRoom /> : <BidPanel />}
 
                             {/* Highest Bidder Summary with High Contrast Styling */}
-                            <div className="brutal bg-[var(--electric)] p-6 text-white border-[4px] border-[var(--ink)] shadow-[6px_6px_0_0_var(--ink)]">
-                                <div className="flex items-center gap-2 mb-4 text-white font-black uppercase text-sm tracking-wider">
+                            <div className="brutal bg-[var(--electric)] p-6 text-black border-[4px] border-[var(--ink)] shadow-[6px_6px_0_0_var(--ink)]">
+                                <div className="flex items-center gap-2 mb-4 font-black uppercase text-sm tracking-wider">
                                     <Trophy size={16} className="text-[var(--acid)]" /> Current Standings
                                 </div>
                                 <div className="text-5xl font-black drop-shadow-[2px_2px_0_var(--ink)] text-[var(--acid)]">
                                     ${auction.currentPrice?.toLocaleString() || 0}
                                 </div>
-                                <div className="mt-4 pt-4 border-t-[2px] border-white/30">
-                                    <div className="text-xs font-black uppercase tracking-wider mb-2 text-white/90">Highest Bidder</div>
+                                <div className="mt-4 pt-4 border-t-[2px]" style={{ borderColor: "rgba(0,0,0,0.3)" }}>
+                                    <div className="text-xs font-black uppercase tracking-wider mb-2">Highest Bidder</div>
                                     {highestBidder ? (
-                                        <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border-[2px] border-white/20">
+                                        <div className="flex items-center gap-3 bg-white/30 p-3 rounded-xl border-[2px] border-[var(--ink)]">
                                             <img src={highestBidder.bidderAvatar || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23e5e7eb'/%3E%3Ccircle cx='20' cy='15' r='7' fill='%239ca3af'/%3E%3Cellipse cx='20' cy='35' rx='12' ry='8' fill='%239ca3af'/%3E%3C/svg%3E"} alt="avatar" className="w-10 h-10 rounded-full border-[2px] border-[var(--ink)] bg-white object-cover" />
                                             <div>
-                                                <div className="font-black text-lg text-white leading-none">{highestBidder.bidderName}</div>
-                                                <div className="text-xs font-bold text-white/80 mt-1">Placed at {new Date(highestBidder.time).toLocaleTimeString()}</div>
+                                                <div className="font-black text-lg leading-none">{highestBidder.bidderName}</div>
+                                                <div className="text-xs font-bold opacity-80 mt-1">Placed at {new Date(highestBidder.time).toLocaleTimeString()}</div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="text-white/80 font-bold text-sm bg-black/10 p-3 rounded-xl">No bids placed yet.</div>
+                                        <div className="font-bold text-sm bg-white/30 p-3 rounded-xl border-[2px] border-[var(--ink)]">No bids placed yet.</div>
                                     )}
                                 </div>
                             </div>

@@ -98,10 +98,12 @@ export default function ActiveListingsTable({ listings }) {
                 </td>
                 <td className="p-6">
                   <div className="flex flex-col">
-                    <span className="font-display text-2xl font-black text-[var(--electric)] drop-shadow-[1.5px_1.5px_0_var(--ink)]">
-                        ${item.currentBid.toLocaleString()}
+                    <span className="font-display text-2xl font-black text-[var(--ink)]">
+                        <span className="bg-[var(--electric)] text-white px-2 py-0.5 rounded-lg">
+                            ${item.currentBid.toLocaleString()}
+                        </span>
                     </span>
-                    <span className="text-[9px] font-black uppercase tracking-tighter text-[var(--ink)]/30">Start: ${item.startingPrice}</span>
+                    <span className="text-[9px] font-black uppercase tracking-tighter text-[var(--ink)]/50 mt-1">Start: ${item.startingPrice}</span>
                   </div>
                 </td>
                 <td className="p-6">

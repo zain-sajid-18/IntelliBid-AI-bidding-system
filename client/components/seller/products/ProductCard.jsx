@@ -74,7 +74,7 @@ export default function ProductCard({ listing, onDeleted, onEnded }) {
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
                     />
                 ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gray-50">
+                    <div className="flex h-full w-full items-center justify-center bg-[var(--muted)]">
                         <span className="text-5xl opacity-20">📦</span>
                     </div>
                 )}

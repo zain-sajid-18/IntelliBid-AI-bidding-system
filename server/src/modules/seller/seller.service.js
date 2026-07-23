@@ -5,10 +5,10 @@ import UserEvent from '../../models/userEvent.model.js';
 import mongoose from 'mongoose';
 
 export const getSellerStatsService = async (sellerId) => {
-    // 1. Total Revenue (sum of currentPrice for ended auctions with a winner)
-    const revenueAggregation = await Auction.aggregate([
-        { $match: { seller: new mongoose.Types.ObjectId(sellerId), status: 'ended', winner: { $exists: true } } },
-        { $group: { _id: null, total: { $sum: "$currentPrice" } } }
+    // 1. Total Revenue (sum of seller payouts from PAID or COMPLETED orders)
+    const revenueAggregation = await Order.aggregate([
+        { $match: { seller: new mongoose.Types.ObjectId(sellerId), status: { $in: ['paid', 'shipped', 'completed'] } } },
+        { $group: { _id: null, total: { $sum: "$sellerPayout" } } }
     ]);
     const totalRevenue = revenueAggregation.length > 0 ? revenueAggregation[0].total : 0;
 
@@ -19,11 +19,10 @@ export const getSellerStatsService = async (sellerId) => {
         endTime: { $gt: new Date() }
     });
 
-    // 3. Pending Orders (Ended auctions where winner exists - simple mock for now)
-    const pendingOrders = await Auction.countDocuments({
+    // 3. Pending Shipments (Orders that are paid but not yet shipped)
+    const pendingShipments = await Order.countDocuments({
         seller: sellerId,
-        status: 'ended',
-        winner: { $exists: true }
+        status: 'paid'
     });
 
     // 4. Total Views Across All Listings
@@ -36,7 +35,7 @@ export const getSellerStatsService = async (sellerId) => {
     return {
         totalRevenue,
         activeListingsCount,
-        pendingShipments: pendingOrders,
+        pendingShipments,
         totalViews
     };
 };

@@ -16,8 +16,10 @@ const baseItems = [
     { emoji: "💬", label: "Messages", color: "var(--electric)", textColor: "#fff", href: "/chat" },
 ];
 
-export default function SellerSidebar() {
-    const [open, setOpen] = useState(false);
+export default function SellerSidebar({ open: propOpen, setOpen: propSetOpen }) {
+    const [internalOpen, setInternalOpen] = useState(false);
+    const open = propOpen !== undefined ? propOpen : internalOpen;
+    const setOpen = propSetOpen || setInternalOpen;
     const pathname = usePathname();
     const totalUnread = useMessagesStore(s => s.totalUnread);
     const { user } = useAuthStore();
@@ -54,7 +56,7 @@ export default function SellerSidebar() {
                     </AnimatePresence>
                 </div>
 
-                <nav className="flex flex-1 flex-col gap-1 overflow-y-hidden p-2 w-full">
+                <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2 w-full">
                     {items.map((it) => {
                         const isActive = pathname === it.href || (pathname && pathname.startsWith(it.href) && it.href !== '/seller/dashboard');
                         const showBadge = it.href === '/chat' && totalUnread > 0;
@@ -135,11 +137,11 @@ export default function SellerSidebar() {
             </aside>
 
             {/* Mobile nav */}
-            <nav className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 md:hidden">
-                <div className="flex items-center gap-2 rounded-full p-2 shadow-[var(--shadow-brutal)]" style={{ background: "color-mix(in oklab, white 80%, transparent)", backdropFilter: "blur(20px)", border: "3px solid var(--ink)" }}>
+            <nav className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 md:hidden max-w-[calc(100vw-2rem)]">
+                <div className="flex items-center gap-2 rounded-full p-2 shadow-[var(--shadow-brutal)] overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" style={{ background: "color-mix(in oklab, white 80%, transparent)", backdropFilter: "blur(20px)", border: "3px solid var(--ink)" }}>
                     {items.map((it) => (
                         <Link key={it.label} href={it.href}>
-                            <motion.span whileTap={{ scale: 0.85, rotate: -10 }} whileHover={{ y: -4 }} className="flex h-12 w-12 items-center justify-center rounded-full border-[3px] border-[var(--ink)] text-xl shadow-[2px_2px_0_0_var(--ink)] transition-all" style={{ background: it.color }} title={it.label}>
+                            <motion.span whileTap={{ scale: 0.85, rotate: -10 }} whileHover={{ y: -4 }} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-[3px] border-[var(--ink)] text-xl shadow-[2px_2px_0_0_var(--ink)] transition-all" style={{ background: it.color }} title={it.label}>
                                 {it.emoji}
                             </motion.span>
                         </Link>

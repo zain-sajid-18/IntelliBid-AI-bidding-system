@@ -29,10 +29,10 @@ export default function FeedGrid() {
 
     if (items.length === 0 && !loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="brutal bg-white p-16 text-center rounded-3xl">
                 <div className="text-6xl mb-4">🏜️</div>
                 <h3 className="font-display text-2xl font-black uppercase tracking-tight">It's quiet out here</h3>
-                <p className="text-sm font-medium opacity-70 mt-2 max-w-md">
+                <p className="text-sm font-medium text-[var(--ink)]/70 mt-2 max-w-md mx-auto">
                     We couldn't find any active auctions matching your current interests or filters.
                 </p>
             </div>
