@@ -45,20 +45,22 @@ export const getActiveListingsService = async (sellerId) => {
     // Fetch products belonging to the seller that are still active
     const activeAuctions = await Auction.find({
         seller: sellerId,
-        status: 'active',
+        status: { $in: ['active', 'live', 'scheduled'] },
         endTime: { $gt: new Date() }
     })
     .sort({ endTime: 1 }) // Show ending soonest first
     .lean();
 
     return activeAuctions.map(a => ({
-        id: a._id,
+        _id: a._id.toString(),
+        id: a._id.toString(),
         title: a.title,
         startingPrice: a.startingPrice,
         currentPrice: a.currentPrice,
         bidCount: a.bidCount,
         endTime: a.endTime,
         category: a.category,
+        type: a.type,
         image: a.images?.[0] || 'https://via.placeholder.com/200'
     }));
 };
@@ -149,4 +151,83 @@ export const shipOrderService = async (orderId, sellerId, trackingNumber) => {
     });
     
     return order;
+};
+
+export const acceptEarlyService = async (auctionId, sellerId) => {
+    const auction = await Auction.findOne({ _id: auctionId, seller: sellerId });
+    if (!auction) throw new Error('Listing not found or access denied');
+    if (auction.type !== 'standard') throw new Error('Early acceptance is only available for standard listings');
+    if (auction.status !== 'active') throw new Error('Listing is not active');
+    if (auction.bidCount === 0) throw new Error('No bids have been placed on this item');
+
+    // Concurrency check: change status atomically to ended
+    const updatedAuction = await Auction.findOneAndUpdate(
+        { _id: auctionId, seller: sellerId, status: 'active' },
+        { $set: { status: 'ended' } },
+        { new: true }
+    );
+    if (!updatedAuction) throw new Error('Listing is no longer active');
+
+    // Find current highest bid
+    const highestBid = await Bid.findOne({ auction: auctionId }).sort({ amount: -1 });
+    if (!highestBid) {
+        // Rollback status if no bid found
+        updatedAuction.status = 'active';
+        await updatedAuction.save();
+        throw new Error('No valid bid found to accept');
+    }
+
+    updatedAuction.winner = highestBid.bidder;
+    await updatedAuction.save();
+
+    // Update bids
+    await Bid.updateMany(
+        { auction: auctionId, _id: { $ne: highestBid._id } },
+        { $set: { status: 'outbid' } }
+    );
+    highestBid.status = 'won';
+    await highestBid.save();
+
+    // Create Order for winner (Expires in 48 hours)
+    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    await Order.create({
+        auction: auctionId,
+        buyer: highestBid.bidder,
+        seller: sellerId,
+        amount: highestBid.amount,
+        status: 'pending',
+        expiresAt
+    });
+
+    // Notify winner
+    await UserEvent.create({
+        userId: highestBid.bidder,
+        eventType: 'auction_won',
+        auctionId,
+        context: `The seller accepted your bid of $${highestBid.amount} for ${updatedAuction.title}! Payment is due within 48 hours.`
+    });
+
+    try {
+        const { getIO } = await import('../../config/socket.js');
+        const io = getIO();
+        io.to(`user:${highestBid.bidder.toString()}`).emit('notification:new', {
+            type: 'auction_won',
+            title: 'Bid Accepted!',
+            body: `The seller accepted your bid of $${highestBid.amount} for "${updatedAuction.title}". Payment is due within 48 hours.`,
+            auctionId,
+            timestamp: new Date().toISOString()
+        });
+        io.to(`auction:${auctionId}`).emit('bid:new', {
+            auctionId,
+            ended: true,
+            status: 'ended',
+            newPrice: highestBid.amount,
+            bidCount: updatedAuction.bidCount,
+            timestamp: new Date().toISOString()
+        });
+    } catch (e) {
+        console.warn('[AcceptEarly] Socket notification skipped:', e.message);
+    }
+
+    return updatedAuction;
 };

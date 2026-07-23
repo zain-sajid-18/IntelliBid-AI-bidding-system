@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Clock, Activity, Loader2, Trophy, Eye, TrendingUp } from "lucide-react";
 import BidHistory from "@/components/auction/BidHistory";
 import ImageGallery from "@/components/auction/ImageGallery";
+import LiveBiddingRoom from "@/components/auction/LiveBiddingRoom";
+import BidPanel from "@/components/auction/BidPanel";
 
 export default function SellerListingDetailPage() {
     const { id } = useParams();
@@ -15,12 +17,15 @@ export default function SellerListingDetailPage() {
 
     useEffect(() => {
         if (id) {
+            // Reset state immediately when navigating to a new listing
+            useAuctionStore.setState({ auction: null, loading: true, error: null });
             fetchAuction(id);
         }
         return () => {
+            // Only emit socket leave — do NOT clear store state here
             if (id) leaveAuctionRoom(id);
         };
-    }, [id, fetchAuction, leaveAuctionRoom]);
+    }, [id]);
 
     if (loading) {
         return (
@@ -59,7 +64,7 @@ export default function SellerListingDetailPage() {
                         <ArrowLeft size={16} strokeWidth={3} /> Back to Products
                     </button>
                     <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1 text-xs font-bold uppercase rounded-lg border-[2px] border-[var(--ink)] ${auction.status === 'active' ? 'bg-[var(--acid)]' : auction.status === 'ended' ? 'bg-[var(--sunset)] text-white' : 'bg-gray-200'}`}>
+                        <span className={`px-3 py-1 text-xs font-bold uppercase rounded-lg border-[2px] border-[var(--ink)] ${auction.status === 'active' || auction.status === 'live' ? 'bg-[var(--acid)] text-[var(--ink)]' : auction.status === 'ended' ? 'bg-[var(--sunset)] text-white' : 'bg-gray-200 text-[var(--ink)]'}`}>
                             {auction.status}
                         </span>
                     </div>
@@ -105,35 +110,37 @@ export default function SellerListingDetailPage() {
                         </div>
                     </div>
 
-                    {/* Right Column: Live Bidding Status */}
+                    {/* Right Column: Live Bidding Status & Controls */}
                     <div className="flex flex-col gap-6">
                         <div className="sticky top-24 flex flex-col gap-6">
                             
-                            {/* Highest Bidder Summary */}
+                            {/* Render Live Bidding Room for live auctions, or BidPanel for standard */}
+                            {auction.type === 'live' ? <LiveBiddingRoom /> : <BidPanel />}
+
+                            {/* Highest Bidder Summary with High Contrast Styling */}
                             <div className="brutal bg-[var(--electric)] p-6 text-white border-[4px] border-[var(--ink)] shadow-[6px_6px_0_0_var(--ink)]">
-                                <div className="flex items-center gap-2 mb-4 text-white/80 font-bold uppercase text-sm tracking-wider">
+                                <div className="flex items-center gap-2 mb-4 text-white font-black uppercase text-sm tracking-wider">
                                     <Trophy size={16} className="text-[var(--acid)]" /> Current Standings
                                 </div>
                                 <div className="text-5xl font-black drop-shadow-[2px_2px_0_var(--ink)] text-[var(--acid)]">
                                     ${auction.currentPrice?.toLocaleString() || 0}
                                 </div>
-                                <div className="mt-4 pt-4 border-t-[2px] border-white/20">
-                                    <div className="text-xs font-bold uppercase tracking-wider mb-2 text-white/80">Highest Bidder</div>
+                                <div className="mt-4 pt-4 border-t-[2px] border-white/30">
+                                    <div className="text-xs font-black uppercase tracking-wider mb-2 text-white/90">Highest Bidder</div>
                                     {highestBidder ? (
-                                        <div className="flex items-center gap-3">
-                                            <img src={highestBidder.bidderAvatar || '/default-avatar.png'} alt="avatar" className="w-10 h-10 rounded-full border-[2px] border-[var(--ink)] bg-white object-cover" />
+                                        <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border-[2px] border-white/20">
+                                            <img src={highestBidder.bidderAvatar || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23e5e7eb'/%3E%3Ccircle cx='20' cy='15' r='7' fill='%239ca3af'/%3E%3Cellipse cx='20' cy='35' rx='12' ry='8' fill='%239ca3af'/%3E%3C/svg%3E"} alt="avatar" className="w-10 h-10 rounded-full border-[2px] border-[var(--ink)] bg-white object-cover" />
                                             <div>
-                                                <div className="font-bold text-lg leading-none">{highestBidder.bidderName}</div>
-                                                <div className="text-xs font-medium text-white/70">Placed at {new Date(highestBidder.time).toLocaleTimeString()}</div>
+                                                <div className="font-black text-lg text-white leading-none">{highestBidder.bidderName}</div>
+                                                <div className="text-xs font-bold text-white/80 mt-1">Placed at {new Date(highestBidder.time).toLocaleTimeString()}</div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="text-white/60 font-medium">No bids placed yet.</div>
+                                        <div className="text-white/80 font-bold text-sm bg-black/10 p-3 rounded-xl">No bids placed yet.</div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Reuse Buyer's Bid History component but disable bidding features visually */}
                             <BidHistory />
                         </div>
                     </div>

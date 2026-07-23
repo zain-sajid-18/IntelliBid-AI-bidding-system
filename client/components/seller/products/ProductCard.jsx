@@ -11,6 +11,11 @@ const STATUS_CONFIG = {
     draft:     { label: "Draft",     bg: "var(--acid)",     text: "var(--ink)" },
     ended:     { label: "Ended",     bg: "var(--ink)/20",   text: "var(--ink)" },
     cancelled: { label: "Cancelled", bg: "var(--hotpink)",  text: "#fff" },
+    scheduled: { label: "Scheduled", bg: "var(--sunset)",   text: "#fff" },
+    live:      { label: "Live Bid",  bg: "var(--electric)", text: "#fff" },
+    awaiting_seller_confirmation: { label: "Awaiting Confirmation", bg: "var(--acid)", text: "var(--ink)" },
+    sale_confirmed: { label: "Confirmed", bg: "#22c55e", text: "#fff" },
+    sale_rejected: { label: "Rejected", bg: "#ef4444", text: "#fff" },
 };
 
 function CountdownTimer({ endTime }) {
@@ -129,7 +134,7 @@ export default function ProductCard({ listing, onDeleted, onEnded }) {
                     )}
                 </div>
 
-                <Link href={`/auction/${listing.id}`} className="hover:text-[var(--electric)] transition-colors">
+                <Link href={`/seller/listings/${listing._id || listing.id}`} className="hover:text-[var(--electric)] transition-colors">
                     <h3 className="font-display text-lg font-black leading-[1.1] line-clamp-2 mb-4 group-hover:underline decoration-2 underline-offset-4">
                         {listing.title}
                     </h3>
@@ -161,7 +166,7 @@ export default function ProductCard({ listing, onDeleted, onEnded }) {
                             <span className="flex items-center gap-1"><Eye size={12} strokeWidth={3} /> {listing.viewCount ?? 0} Views</span>
                         </div>
                         <Link 
-                            href={`/auction/${listing.id}`}
+                            href={`/seller/listings/${listing._id || listing.id}`}
                             className="text-[10px] font-black uppercase tracking-widest text-[var(--electric)] flex items-center gap-1 hover:gap-2 transition-all"
                         >
                             View Live <Clock size={10} strokeWidth={3} />

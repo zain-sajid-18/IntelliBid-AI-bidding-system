@@ -13,6 +13,7 @@ import eventsRoutes from './modules/events/events.routes.js';
 import messagesRoutes from './modules/messages/messages.routes.js';
 import auctionRoutes from './modules/auction/auction.routes.js';
 import paymentRoutes from './modules/payment/payment.routes.js';
+import liveBiddingRoutes from './modules/live-bidding/live-bidding.routes.js';
 
 import { errorHandler } from './middleware/error.middleware.js';
 
@@ -20,7 +21,8 @@ const app = express();
 
 // security middleware
 app.use(helmet({
-  crossOriginOpenerPolicy: { policy: "unsafe-none" }
+  crossOriginOpenerPolicy: { policy: "unsafe-none" },
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 // CORS configuration with automatic trailing slash removal
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
@@ -48,6 +50,7 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/auction', auctionRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/live-bidding', liveBiddingRoutes);
 
 
 // Error Handler

@@ -86,13 +86,13 @@ export default function ActiveListingsTable({ listings }) {
                 className="border-b-[2px] border-[var(--ink)]/10 last:border-0 hover:bg-[var(--acid)]/5 transition-colors group"
               >
                 <td className="p-6">
-                  <Link href={`/auction/${item.id}`} className="flex items-center gap-5">
+                  <Link href={`/auction/${item._id || item.id}`} className="flex items-center gap-5">
                     <div className="relative shrink-0">
                         <img src={item.image} alt={item.title} className="w-16 h-16 rounded-2xl border-[3px] border-[var(--ink)] object-cover bg-white shadow-[3px_3px_0_0_var(--ink)] group-hover:shadow-[5px_5px_0_0_var(--ink)] group-hover:-translate-y-1 transition-all" />
                     </div>
                     <div className="flex flex-col">
                         <span className="font-display font-black text-base leading-tight line-clamp-1 mb-1">{item.title}</span>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--ink)]/40">ID: {item.id.toString().slice(-6).toUpperCase()}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--ink)]/40">ID: {(item._id || item.id).toString().slice(-6).toUpperCase()}</span>
                     </div>
                   </Link>
                 </td>

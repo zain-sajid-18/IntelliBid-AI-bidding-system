@@ -12,7 +12,14 @@ const DURATIONS = [
     { label: '14 Days', value: 14 },
 ];
 
-export { CATEGORIES, DURATIONS };
+const LIVE_DURATIONS = [
+    { label: '15 min', value: 15 },
+    { label: '30 min', value: 30 },
+    { label: '1 hour', value: 60 },
+    { label: '2 hours', value: 120 },
+];
+
+export { CATEGORIES, DURATIONS, LIVE_DURATIONS };
 
 export const useListingStore = create((set, get) => ({
     // Wizard step (0 = images, 1 = details, 2 = pricing)
@@ -36,6 +43,10 @@ export const useListingStore = create((set, get) => ({
     reservePrice: '',
     durationDays: 7,
     status: 'active',   // 'active' | 'draft'
+    // Live Bidding
+    type: 'standard', // 'standard' | 'live'
+    scheduledStartTime: '',
+    liveDurationMinutes: 60, // default 1 hour
 
     // Submission
     submitting: false,
@@ -103,6 +114,9 @@ export const useListingStore = create((set, get) => ({
     setReservePrice: (v) => set({ reservePrice: v }),
     setDurationDays: (v) => set({ durationDays: v }),
     setStatus: (v) => set({ status: v }),
+    setType: (v) => set({ type: v }),
+    setScheduledStartTime: (v) => set({ scheduledStartTime: v }),
+    setLiveDurationMinutes: (v) => set({ liveDurationMinutes: v }),
 
     runAiEnhance: async () => {
         const { title, category, imagePreviews } = get();
@@ -165,6 +179,11 @@ export const useListingStore = create((set, get) => ({
             if (s.reservePrice) formData.append('reservePrice', s.reservePrice);
             formData.append('durationDays', String(s.durationDays));
             formData.append('status', s.status);
+            formData.append('type', s.type);
+            if (s.type === 'live') {
+                formData.append('scheduledStartTime', s.scheduledStartTime);
+                formData.append('liveDurationMinutes', String(s.liveDurationMinutes));
+            }
 
             const res = await api('/api/seller/listings', {
                 method: 'POST',
@@ -185,6 +204,7 @@ export const useListingStore = create((set, get) => ({
         step: 0, imageFiles: [], imagePreviews: [], title: '', description: '',
         category: '', tags: [], aiLoading: false, aiError: null, aiUsed: false,
         startingPrice: '', reservePrice: '', durationDays: 7, status: 'active',
+        type: 'standard', scheduledStartTime: '', liveDurationMinutes: 60,
         submitting: false, submitError: null, submitSuccess: false, createdListingId: null,
     }),
 }));

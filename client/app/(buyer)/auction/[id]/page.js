@@ -10,6 +10,7 @@ import { ArrowLeft, Clock, Heart, Loader2 } from "lucide-react";
 
 import ImageGallery from "@/components/auction/ImageGallery";
 import BidPanel from "@/components/auction/BidPanel";
+import LiveBiddingRoom from "@/components/auction/LiveBiddingRoom";
 import BidHistory from "@/components/auction/BidHistory";
 import SellerCard from "@/components/auction/SellerCard";
 
@@ -41,12 +42,15 @@ export default function AuctionDetailPage() {
 
     useEffect(() => {
         if (id) {
+            // Reset state immediately when navigating to a new auction
+            useAuctionStore.setState({ auction: null, loading: true, error: null });
             fetchAuction(id);
         }
         return () => {
+            // Only emit socket leave — do NOT clear store state here
             if (id) leaveAuctionRoom(id);
         };
-    }, [id, fetchAuction, leaveAuctionRoom]);
+    }, [id]);
 
     useEffect(() => {
         if (auction?.endTime) {
@@ -156,7 +160,7 @@ export default function AuctionDetailPage() {
                     {/* Right Column: Bidding & Seller */}
                     <div className="flex flex-col gap-6">
                         <div className="sticky top-24 flex flex-col gap-6">
-                            <BidPanel />
+                            {auction.type === 'live' ? <LiveBiddingRoom /> : <BidPanel />}
                             <BidHistory />
                             <SellerCard seller={auction.seller} auctionId={auction._id} />
                         </div>

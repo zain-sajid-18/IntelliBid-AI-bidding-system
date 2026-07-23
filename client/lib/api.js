@@ -2,6 +2,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export const api = async (endpoint, options = {}) => {
     const isFormData = options.body instanceof FormData;
+    const isGetRequest = !options.method || options.method.toUpperCase() === 'GET';
     
     // Retrieve token from localStorage (if running in client browser context)
     let token = null;
@@ -15,16 +16,25 @@ export const api = async (endpoint, options = {}) => {
         ...options.headers,
     };
 
-    const res = await fetch(`${BASE_URL}${endpoint}`, {
+    const fetchOptions = {
         credentials: 'include',
-        cache: 'no-store',
         ...options,
         headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            ...headers
-        },
-    });
+            ...headers,
+            // Only add no-cache headers if explicitly requested or not a GET request
+            ...((!isGetRequest || options.cache === 'no-store') && {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+            })
+        }
+    };
+
+    // For GET requests, use default cache unless specified
+    if (isGetRequest && !options.cache) {
+        delete fetchOptions.cache;
+    }
+
+    const res = await fetch(`${BASE_URL}${endpoint}`, fetchOptions);
 
     let data;
     const text = await res.text();

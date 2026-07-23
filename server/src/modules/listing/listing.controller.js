@@ -1,22 +1,22 @@
 import { asyncHandler } from '../../utils/asyncHandler.js';
 import {
-    createListingService,
-    getAiEnhancedContentService,
-    getMyListingsService,
-    updateListingService,
-    deleteListingService,
+  createListingService,
+  getAiEnhancedContentService,
+  getMyListingsService,
+  updateListingService,
+  deleteListingService,
 } from './listing.service.js';
 
 // POST /api/seller/listings
 export const createListing = asyncHandler(async (req, res) => {
-    const imageUrls = req.files ? req.files.map(f => f.path) : [];
+  const imageUrls = req.files ? req.files.map(f => f.secure_url || f.path) : [];
 
-    if (imageUrls.length === 0) {
-        return res.status(400).json({ success: false, message: 'At least one image is required' });
-    }
+  if (imageUrls.length === 0) {
+    return res.status(400).json({ success: false, message: 'At least one image is required' });
+  }
 
-    const auction = await createListingService(req.user.id, req.body, imageUrls);
-    res.status(201).json({ success: true, data: auction });
+  const auction = await createListingService(req.user.id, req.body, imageUrls);
+  res.status(201).json({ success: true, data: auction });
 });
 
 // POST /api/seller/listings/ai-enhance

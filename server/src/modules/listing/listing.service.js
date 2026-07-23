@@ -11,25 +11,65 @@ const FALLBACK_MODEL = 'gemini-2.0-flash-lite';
 export const createListingService = async (sellerId, data, imageUrls) => {
     const {
         title, description, category, tags,
-        startingPrice, reservePrice, durationDays, status
+        startingPrice, reservePrice, durationDays, status,
+        type, scheduledStartTime, maxParticipants, liveDurationMinutes
     } = data;
 
-    const endTime = new Date();
-    endTime.setDate(endTime.getDate() + Number(durationDays || 7));
+    const parsedStartingPrice = Number(startingPrice);
+    const parsedReservePrice = reservePrice ? Number(reservePrice) : null;
+    const parsedType = type === 'live' ? 'live' : 'standard';
+    const parsedMaxParticipants = maxParticipants ? Math.max(2, Math.min(10, Number(maxParticipants))) : 5;
+    const parsedLiveDurationMinutes = liveDurationMinutes ? Number(liveDurationMinutes) : 60; // default 1 hour
 
-    const auction = await Auction.create({
+    // Validate reserve price is not less than starting price
+    if (parsedReservePrice !== null && parsedReservePrice < parsedStartingPrice) {
+        throw new Error('Reserve price cannot be less than starting price');
+    }
+
+    // For live bidding room, validate scheduled start time is in future and duration
+    if (parsedType === 'live') {
+        if (!scheduledStartTime) {
+            throw new Error('Scheduled start time is required for live bidding rooms');
+        }
+        const startDate = new Date(scheduledStartTime);
+        if (startDate <= new Date()) {
+            throw new Error('Scheduled start time must be in the future');
+        }
+        const allowedDurations = [15, 30, 60, 120];
+        if (!allowedDurations.includes(parsedLiveDurationMinutes)) {
+            throw new Error('Live bidding duration must be 15 minutes, 30 minutes, 1 hour, or 2 hours');
+        }
+    }
+
+    const endTime = new Date();
+    if (parsedType === 'live' && scheduledStartTime) {
+        endTime.setTime(new Date(scheduledStartTime).getTime() + parsedLiveDurationMinutes * 60 * 1000);
+    } else {
+        endTime.setDate(endTime.getDate() + Number(durationDays || 7));
+    }
+
+    const auctionData = {
         title: title.trim(),
         description: description.trim(),
         category,
         tags: Array.isArray(tags) ? tags : (tags || '').split(',').map(t => t.trim()).filter(Boolean),
         images: imageUrls,
-        startingPrice: Number(startingPrice),
-        currentPrice: Number(startingPrice),
-        reservePrice: reservePrice ? Number(reservePrice) : undefined,
+        startingPrice: parsedStartingPrice,
+        currentPrice: parsedStartingPrice,
+        reservePrice: parsedReservePrice,
         seller: sellerId,
         endTime,
-        status: status === 'draft' ? 'draft' : 'active',
-    });
+        type: parsedType,
+        status: status === 'draft' ? 'draft' : (parsedType === 'live' ? 'scheduled' : 'active'),
+    };
+
+    if (parsedType === 'live') {
+        auctionData.scheduledStartTime = new Date(scheduledStartTime);
+        auctionData.maxParticipants = parsedMaxParticipants;
+        auctionData.participants = [];
+    }
+
+    const auction = await Auction.create(auctionData);
 
     return auction;
 };
@@ -123,16 +163,20 @@ export const getMyListingsService = async (sellerId, { status, page = 1, limit =
 
     return {
         listings: listings.map(l => ({
-            id: l._id,
+            _id: l._id.toString(),
+            id: l._id.toString(),
             title: l.title,
             category: l.category,
             image: l.images?.[0] || null,
+            images: l.images || [],
             currentPrice: l.currentPrice,
             startingPrice: l.startingPrice,
             bidCount: l.bidCount,
             viewCount: l.viewCount,
             endTime: l.endTime,
             status: l.status,
+            type: l.type,
+            scheduledStartTime: l.scheduledStartTime,
             createdAt: l.createdAt,
         })),
         total,
@@ -148,10 +192,22 @@ export const updateListingService = async (listingId, sellerId, data) => {
     if (auction.status === 'ended') throw new Error('Cannot edit an ended auction');
 
     const allowedUpdates = ['title', 'description', 'tags', 'reservePrice', 'status'];
+    const updateData = {};
     allowedUpdates.forEach(field => {
-        if (data[field] !== undefined) auction[field] = data[field];
+        if (data[field] !== undefined) updateData[field] = data[field];
     });
 
+    // Validate reserve price if being updated
+    if (updateData.reservePrice !== undefined) {
+        const parsedReservePrice = updateData.reservePrice !== '' ? Number(updateData.reservePrice) : null;
+        const currentStartingPrice = auction.startingPrice;
+        if (parsedReservePrice !== null && parsedReservePrice < currentStartingPrice) {
+            throw new Error('Reserve price cannot be less than starting price');
+        }
+        updateData.reservePrice = parsedReservePrice;
+    }
+
+    Object.assign(auction, updateData);
     await auction.save();
     return auction;
 };

@@ -10,6 +10,10 @@ import {
     getSellerOrdersService,
     shipOrderService
 } from './seller.service.js';
+import {
+    confirmSaleService,
+    rejectSaleService
+} from '../live-bidding/live-bidding.service.js';
 
 export const getSellerStats = asyncHandler(async (req, res) => {
     const stats = await getSellerStatsService(req.user.id);
@@ -95,6 +99,40 @@ export const activateSeller = asyncHandler(async (req, res) => {
         success: true,
         message: 'Seller account activated successfully',
         user
+    });
+});
+
+// Confirm sale for live auction
+export const confirmSale = asyncHandler(async (req, res) => {
+    const { auctionId } = req.params;
+    const auction = await confirmSaleService(auctionId, req.user.id);
+    res.status(200).json({
+        success: true,
+        message: 'Sale confirmed successfully',
+        data: auction
+    });
+});
+
+// Reject sale for live auction
+export const rejectSale = asyncHandler(async (req, res) => {
+    const { auctionId } = req.params;
+    const auction = await rejectSaleService(auctionId, req.user.id);
+    res.status(200).json({
+        success: true,
+        message: 'Sale rejected successfully',
+        data: auction
+    });
+});
+
+// Accept highest bid early for standard listing
+export const acceptEarly = asyncHandler(async (req, res) => {
+    const { auctionId } = req.params;
+    const { acceptEarlyService } = await import('./seller.service.js');
+    const auction = await acceptEarlyService(auctionId, req.user.id);
+    res.status(200).json({
+        success: true,
+        message: 'Current highest bid accepted and auction closed',
+        data: auction
     });
 });
 

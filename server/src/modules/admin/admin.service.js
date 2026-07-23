@@ -1,4 +1,4 @@
-import Product from '../../models/product.model.js';
+import Auction from '../../models/auction.model.js';
 import Bid from '../../models/bid.model.js';
 import User from '../../models/user.model.js';
 
@@ -16,14 +16,13 @@ export const getAdminStatsService = async () => {
     const platformRevenue = grossVolume * 0.05; // 5% fee
 
     // 3. Active Auctions
-    const activeAuctionsCount = await Product.countDocuments({
-        endingDate: { $gt: new Date() }
+    const activeAuctionsCount = await Auction.countDocuments({
+        status: { $in: ['active', 'live'] },
+        endTime: { $gt: new Date() }
     });
 
     // 4. Moderation Reports (Mock for now until Report model exists)
-    const pendingReports = await Product.countDocuments({
-
-    }) || 0;
+    const pendingReports = 0;
 
     return {
         totalUsers,
@@ -54,7 +53,7 @@ export const getRecentUsersService = async () => {
 export const getModerationQueueService = async () => {
     // Fetch products that might need review (e.g., extremely high starting prices)
     // This is a proxy for "flagged" items until a real reporting system is built
-    const flaggedItems = await Product.find({
+    const flaggedItems = await Auction.find({
         $or: [
             { startingPrice: { $gt: 10000 } } // Example threshold for manual review
         ]
@@ -66,7 +65,7 @@ export const getModerationQueueService = async () => {
 
     return flaggedItems.map(item => ({
         id: item._id,
-        title: item.name,
+        title: item.title,
         seller: `${item.seller?.firstName || ''} ${item.seller?.lastName || ''}`.trim() || item.seller?.email,
         reason: 'High Value / Automated Flag',
         status: 'pending_review',
@@ -75,9 +74,9 @@ export const getModerationQueueService = async () => {
 };
 
 export const getSystemActivityService = async () => {
-    // Audit log: Combine recent bids and recent products
+    // Audit log: Combine recent bids
     const recentBids = await Bid.find()
-        .populate('product', 'name')
+        .populate('auction', 'title')
         .populate('bidder', 'firstName')
         .sort({ createdAt: -1 })
         .limit(5)
@@ -86,7 +85,7 @@ export const getSystemActivityService = async () => {
     const activities = recentBids.map(bid => ({
         id: `bid_${bid._id}`,
         type: 'bid',
-        message: `$${bid.amount} bid placed on ${bid.product?.name || 'Unknown Item'} by ${bid.bidder?.firstName || 'User'}`,
+        message: `$${bid.amount} bid placed on ${bid.auction?.title || 'Unknown Item'} by ${bid.bidder?.firstName || 'User'}`,
         time: bid.createdAt
     }));
 
