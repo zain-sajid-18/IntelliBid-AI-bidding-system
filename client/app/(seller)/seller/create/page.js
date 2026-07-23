@@ -46,7 +46,23 @@ function StepIndicator({ currentStep }) {
 function canProceedStep(step, store) {
     if (step === 0) return store.imagePreviews.length > 0;
     if (step === 1) return !!store.title && !!store.category && !!store.description;
-    if (step === 2) return !!store.startingPrice && Number(store.startingPrice) > 0;
+    if (step === 2) {
+        const startingValid = !!store.startingPrice && Number(store.startingPrice) > 0;
+        if (!startingValid) return false;
+        // Check reserve price validation
+        const parsedStarting = Number(store.startingPrice);
+        const parsedReserve = store.reservePrice ? Number(store.reservePrice) : null;
+        const hasReserveError = parsedReserve !== null && parsedReserve < parsedStarting;
+        if (hasReserveError) return false;
+        // Live bidding validation
+        if (store.type === 'live') {
+            if (!store.scheduledStartTime) return false;
+            if (new Date(store.scheduledStartTime) <= new Date()) return false;
+            // Max duration check (2 hours = 120 mins)
+            if (!store.liveDurationMinutes || store.liveDurationMinutes > 120) return false;
+        }
+        return true;
+    }
     return false;
 }
 

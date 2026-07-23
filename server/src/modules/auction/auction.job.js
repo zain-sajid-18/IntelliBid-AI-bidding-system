@@ -3,17 +3,39 @@ import Bid from '../../models/bid.model.js';
 import UserEvent from '../../models/userEvent.model.js';
 import Order from '../../models/order.model.js';
 import User from '../../models/user.model.js';
+import { getIO } from '../../config/socket.js';
 
 export const resolveEndedAuctions = async () => {
     try {
-        // Find auctions that have passed their end time but are still "active"
+        // First, start any scheduled live rooms that are ready
+        const roomsToStart = await Auction.find({
+            type: 'live',
+            status: 'scheduled',
+            scheduledStartTime: { $lte: new Date() },
+            endTime: { $gt: new Date() }
+        });
+
+        for (const auction of roomsToStart) {
+            auction.status = 'live';
+            await auction.save();
+
+            const io = getIO();
+            io.to(`auction:${auction._id}`).emit('live:roomStarted', {
+                auctionId: auction._id,
+                title: auction.title,
+                startingPrice: auction.startingPrice,
+                currentPrice: auction.currentPrice
+            });
+        }
+
+        // Now, handle all ended auctions (standard and live)
         const endedAuctions = await Auction.find({
             endTime: { $lte: new Date() },
-            status: 'active'
+            status: { $in: ['active', 'live'] }
         });
 
         for (const auction of endedAuctions) {
-            auction.status = 'ended';
+            const io = getIO();
 
             if (auction.bidCount > 0) {
                 // Find highest bid
@@ -31,38 +53,73 @@ export const resolveEndedAuctions = async () => {
                     highestBid.status = 'won'; 
                     await highestBid.save();
 
-                    // Create Order for the winner (Expires in 48 hours)
-                    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
-                    await Order.create({
-                        auction: auction._id,
-                        buyer: highestBid.bidder,
-                        seller: auction.seller,
-                        amount: highestBid.amount,
-                        status: 'pending',
-                        expiresAt
-                    });
+                    if (auction.type === 'standard') {
+                        // Standard auction: set status to ended and create order immediately
+                        auction.status = 'ended';
 
-                    // Create event for winner notification
-                    await UserEvent.create({
-                        userId: highestBid.bidder,
-                        eventType: 'auction_won',
+                        // Create Order for the winner (Expires in 48 hours)
+                        const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+                        await Order.create({
+                            auction: auction._id,
+                            buyer: highestBid.bidder,
+                            seller: auction.seller,
+                            amount: highestBid.amount,
+                            status: 'pending',
+                            expiresAt
+                        });
+
+                        // Create event for winner notification
+                        await UserEvent.create({
+                            userId: highestBid.bidder,
+                            eventType: 'auction_won',
+                            auctionId: auction._id,
+                            context: `You won the auction for ${auction.title} with a bid of $${highestBid.amount}! Payment is due within 48 hours.`
+                        });
+                    } else {
+                        // Live auction: set status to awaiting_seller_confirmation first, send notification to seller and winner
+                        auction.status = 'awaiting_seller_confirmation';
+
+                        // Notify winner
+                        await UserEvent.create({
+                            userId: auction.winner,
+                            eventType: 'auction_won',
+                            auctionId: auction._id,
+                            context: `You won the live auction for ${auction.title} with a bid of $${highestBid.amount}! Waiting for seller to confirm the sale.`
+                        });
+
+                        // Notify seller via socket
+                        io.to(`user:${auction.seller}`).emit('notification:new', {
+                            type: 'live_auction_ended',
+                            title: 'Live Auction Ended',
+                            body: `Your live auction for "${auction.title}" has ended. The winning bid is $${highestBid.amount}! Review the bid and confirm or reject the sale.`,
+                            auctionId: auction._id,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+
+                    io.to(`auction:${auction._id}`).emit('live:roomEnded', {
                         auctionId: auction._id,
-                        context: `You won the auction for ${auction.title} with a bid of $${highestBid.amount}! Payment is due within 48 hours.`
+                        winnerId: highestBid.bidder,
+                        winningAmount: highestBid.amount
                     });
                 }
             } else {
                 // No bids, auction just ends without a winner
                 auction.status = 'ended';
+                io.to(`auction:${auction._id}`).emit('live:roomEnded', {
+                    auctionId: auction._id,
+                    winnerId: null
+                });
             }
 
             await auction.save();
         }
         
-        if (endedAuctions.length > 0) {
-            console.log(`[AuctionJob] Resolved ${endedAuctions.length} ended auctions.`);
+        if (roomsToStart.length > 0 || endedAuctions.length > 0) {
+            console.log(`[AuctionJob] Started ${roomsToStart.length} live rooms, resolved ${endedAuctions.length} ended auctions.`);
         }
     } catch (error) {
-        console.error('[AuctionJob] Error resolving ended auctions:', error);
+        console.error('[AuctionJob] Error resolving auctions:', error);
     }
 };
 

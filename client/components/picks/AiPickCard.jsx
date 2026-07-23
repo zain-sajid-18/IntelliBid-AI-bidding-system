@@ -98,7 +98,7 @@ export default function AiPickCard({ pick, index }) {
                     </div>
                     
                     <Link 
-                        href={`/auction/${pick.id}`}
+                        href={`/auction/${pick._id || pick.id}`}
                         className="flex h-10 w-10 items-center justify-center rounded-xl border-[3px] border-[var(--ink)] bg-[var(--acid)] shadow-[2px_2px_0_0_var(--ink)] transition-transform hover:-translate-y-1 hover:shadow-[4px_4px_0_0_var(--ink)]"
                     >
                         <ArrowUpRight className="h-5 w-5" strokeWidth={3} />

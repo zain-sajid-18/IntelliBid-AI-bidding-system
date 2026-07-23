@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
+import { joinLiveRoomService, leaveLiveRoomService, placeLiveBidService } from '../modules/live-bidding/live-bidding.service.js';
 
 let io;
 
@@ -61,8 +62,47 @@ export const initSocket = (httpServer) => {
             socket.leave(`auction:${auctionId}`);
         });
 
-        socket.on('disconnect', () => {
+        socket.activeLiveRooms = new Set();
+
+        // ── Live bidding room events ───────────────────────────────────────────
+        socket.on('live:joinRoom', async (auctionId, callback) => {
+            try {
+                await joinLiveRoomService(auctionId, socket.user._id);
+                socket.activeLiveRooms.add(auctionId.toString());
+                if (typeof callback === 'function') callback({ success: true });
+            } catch (err) {
+                if (typeof callback === 'function') callback({ success: false, message: err.message });
+            }
+        });
+
+        socket.on('live:leaveRoom', async (auctionId, callback) => {
+            try {
+                await leaveLiveRoomService(auctionId, socket.user._id);
+                socket.activeLiveRooms.delete(auctionId.toString());
+                if (typeof callback === 'function') callback({ success: true });
+            } catch (err) {
+                if (typeof callback === 'function') callback({ success: false, message: err.message });
+            }
+        });
+
+        socket.on('live:placeBid', async ({ auctionId, amount }, callback) => {
+            try {
+                await placeLiveBidService(auctionId, socket.user._id, amount);
+                if (typeof callback === 'function') callback({ success: true });
+            } catch (err) {
+                if (typeof callback === 'function') callback({ success: false, message: err.message });
+            }
+        });
+
+        socket.on('disconnect', async () => {
             console.log(`[Socket] Disconnected: ${socket.user.firstName}`);
+            for (const auctionId of socket.activeLiveRooms) {
+                try {
+                    await leaveLiveRoomService(auctionId, socket.user._id);
+                } catch (e) {
+                    console.warn(`[Socket] Auto cleanup room ${auctionId} failed:`, e.message);
+                }
+            }
         });
     });
 

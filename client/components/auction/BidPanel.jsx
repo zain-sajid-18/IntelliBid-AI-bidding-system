@@ -12,9 +12,31 @@ export default function BidPanel() {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
 
-    const isOwner = user?._id === auction?.seller?._id;
+    const sellerId = typeof auction?.seller === 'string' ? auction.seller : auction?.seller?._id;
+    const isOwner = user?.id === sellerId || user?._id === sellerId;
     const isActive = auction?.status === "active";
     const minBid = (auction?.currentPrice || auction?.startingPrice || 0) + 1;
+    const [submittingAccept, setSubmittingAccept] = useState(false);
+
+    const handleAcceptEarly = async () => {
+        if (!auction?._id) return;
+        setSubmittingAccept(true);
+        setError(null);
+        try {
+            const { api } = await import("@/lib/api");
+            const res = await api(`/api/seller/listings/${auction._id}/accept-early`, { method: "POST" });
+            if (res.success) {
+                setSuccess(true);
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                setError(res.message || "Failed to accept bid");
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSubmittingAccept(false);
+        }
+    };
 
     useEffect(() => {
         // Auto-suggest next minimum bid if empty or too low
@@ -74,8 +96,20 @@ export default function BidPanel() {
             )}
             
             {isOwner && isActive && (
-                <div className="w-full rounded-xl border-[3px] border-[var(--ink)] bg-[var(--acid)] py-3 px-4 font-display text-sm font-black uppercase text-[var(--ink)] shadow-[4px_4px_0_0_var(--ink)]">
-                    You are the seller of this item.
+                <div className="w-full space-y-3">
+                    <div className="w-full rounded-xl border-[3px] border-[var(--ink)] bg-[var(--acid)] py-3 px-4 font-display text-sm font-black uppercase text-[var(--ink)] shadow-[4px_4px_0_0_var(--ink)]">
+                        You are the seller of this item.
+                    </div>
+                    {auction?.bidCount > 0 && (
+                        <button
+                            onClick={handleAcceptEarly}
+                            disabled={submittingAccept}
+                            className="w-full flex items-center justify-center gap-2 rounded-xl border-[3px] border-[var(--ink)] bg-[var(--acid)] py-3 px-4 font-display text-sm font-black uppercase text-[var(--ink)] shadow-[4px_4px_0_0_var(--ink)] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--ink)] disabled:opacity-50"
+                        >
+                            {submittingAccept ? <Loader2 className="animate-spin h-4 w-4" /> : <Gavel className="h-4 w-4" />}
+                            Accept Highest Bid Early
+                        </button>
+                    )}
                 </div>
             )}
 

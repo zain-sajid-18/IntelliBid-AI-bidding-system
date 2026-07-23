@@ -25,7 +25,7 @@ export const getFeedService = async (userId, { page = 1, category, minPrice, max
     const offset = (page - 1) * FEED_SIZE;
 
     // Build query filter
-    const filter = { status: 'active', endTime: { $gt: new Date() } };
+    const filter = { status: { $in: ['active', 'scheduled', 'live'] }, endTime: { $gt: new Date() } };
     if (category) filter.category = category;
     if (minPrice || maxPrice) {
         filter.currentPrice = {};
@@ -95,7 +95,7 @@ export const getFeedService = async (userId, { page = 1, category, minPrice, max
 };
 
 const getColdStartFeed = async (limit, offset, filters = {}, totalActive) => {
-    const filter = { status: 'active', endTime: { $gt: new Date() } };
+    const filter = { status: { $in: ['active', 'scheduled', 'live'] }, endTime: { $gt: new Date() } };
     if (filters.category) filter.category = filters.category;
 
     const items = await Auction.aggregate([

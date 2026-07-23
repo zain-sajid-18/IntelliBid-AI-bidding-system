@@ -1,20 +1,44 @@
-import nodemailer from 'nodemailer';
 
-let transporter;
+let brevoApiKey = process.env.BREVO_API_KEY;
+let brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || 'no-reply@intellibid.com';
+let brevoSenderName = process.env.BREVO_SENDER_NAME || 'IntelliBid';
 
-const getTransporter = () => {
-    if (transporter) return transporter;
-    transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-        connectionTimeout: 5000, // 5 seconds
-        socketTimeout: 5000,
-        greetingTimeout: 5000,
-    });
-    return transporter;
+// Helper to send emails via Brevo API
+const sendBrevoEmail = async ({ to, subject, html }) => {
+    if (!brevoApiKey) {
+        console.log("📧 EMAIL MOCK (No Brevo API key provided)");
+        return;
+    }
+
+    try {
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': brevoApiKey,
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                sender: {
+                    name: brevoSenderName,
+                    email: brevoSenderEmail,
+                },
+                to: [{ email: to }],
+                subject,
+                htmlContent: html,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`Brevo API error (${response.status}): ${errorData}`);
+        }
+
+        console.log(`✅ Email sent successfully to: ${to}`);
+    } catch (error) {
+        console.error(`❌ Failed to send email to ${to}:`, error.message);
+        console.log("ℹ️ Bypassing throw: Email info was logged to console above.");
+    }
 };
 
 export const sendVerificationEmail = async (email, token) => {
@@ -25,18 +49,10 @@ export const sendVerificationEmail = async (email, token) => {
     console.log(`Verify Link: ${verifyUrl}`);
     console.log("-----------------------------------------");
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.log("📧 EMAIL MOCK (No credentials provided)");
-        return;
-    }
-
-    try {
-        const transporter = getTransporter();
-        await transporter.sendMail({
-            from: `"IntelliBid" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: 'Verify your IntelliBid account ⚡',
-            html: `
+    await sendBrevoEmail({
+        to: email,
+        subject: 'Verify your IntelliBid account ⚡',
+        html: `
             <div style="font-family: 'Space Grotesk', sans-serif; background-color: #f0f0f0; padding: 40px 20px; text-align: center;">
                 <div style="max-width: 500px; margin: 0 auto; background-color: white; border: 4px solid #000000; box-shadow: 12px 12px 0px 0px #000000; padding: 40px;">
                     <div style="background-color: #7c3aed; color: white; display: inline-block; padding: 10px 20px; font-size: 24px; font-weight: 900; border: 3px solid #000000; margin-bottom: 30px;">
@@ -52,13 +68,8 @@ export const sendVerificationEmail = async (email, token) => {
                     </div>
                 </div>
             </div>
-            `,
-        });
-        console.log(`✅ Verification email sent to: ${email}`);
-    } catch (error) {
-        console.error(`❌ Failed to send verification email to ${email}:`, error.message);
-        console.log("ℹ️ Bypassing throw: Verification link was logged to console above.");
-    }
+        `,
+    });
 };
 
 export const sendPasswordResetEmail = async (email, token) => {
@@ -69,18 +80,10 @@ export const sendPasswordResetEmail = async (email, token) => {
     console.log(`Reset Link: ${resetUrl}`);
     console.log("-----------------------------------------");
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.log("📧 EMAIL MOCK (No credentials provided)");
-        return;
-    }
-
-    try {
-        const transporter = getTransporter();
-        await transporter.sendMail({
-            from: `"IntelliBid" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: 'Reset your IntelliBid password 🔐',
-            html: `
+    await sendBrevoEmail({
+        to: email,
+        subject: 'Reset your IntelliBid password 🔐',
+        html: `
             <div style="font-family: 'Space Grotesk', sans-serif; background-color: #f0f0f0; padding: 40px 20px; text-align: center;">
                 <div style="max-width: 500px; margin: 0 auto; background-color: white; border: 4px solid #000000; box-shadow: 12px 12px 0px 0px #000000; padding: 40px;">
                     <div style="background-color: #ff0055; color: white; display: inline-block; padding: 10px 20px; font-size: 24px; font-weight: 900; border: 3px solid #000000; margin-bottom: 30px;">
@@ -96,11 +99,6 @@ export const sendPasswordResetEmail = async (email, token) => {
                     </div>
                 </div>
             </div>
-            `,
-        });
-        console.log(`✅ Password reset email sent to: ${email}`);
-    } catch (error) {
-        console.error(`❌ Failed to send password reset email to ${email}:`, error.message);
-        console.log("ℹ️ Bypassing throw: Reset link was logged to console above.");
-    }
+        `,
+    });
 };

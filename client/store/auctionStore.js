@@ -46,7 +46,7 @@ export const useAuctionStore = create((set, get) => ({
                                     time: data.timestamp,
                                     bidderName: data.bidderName,
                                 },
-                                ...state.auction.bidHistory
+                                ...(state.auction?.bidHistory || [])
                             ].slice(0, 10) // keep top 10
                         }
                     }));
@@ -61,7 +61,6 @@ export const useAuctionStore = create((set, get) => ({
             socket.emit('leave:auction', id);
             socket.off('bid:new');
         }
-        set({ auction: null, error: null }); // clear state
     },
 
     placeBid: async (amount) => {

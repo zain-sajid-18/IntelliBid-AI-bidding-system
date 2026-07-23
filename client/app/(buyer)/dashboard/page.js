@@ -335,7 +335,7 @@ function BuyerDashboardContent() {
               </div>
             ) : (
               recommendations?.slice(0, 4).map((pick, i) => (
-                <Link href={`/auction/${pick.id}`} key={i} className="block brutal overflow-hidden bg-white hover:-translate-y-2 transition-all group shadow-[6px_6px_0_0_var(--ink)] hover:shadow-[10px_10px_0_0_var(--hotpink)]">
+                <Link href={`/auction/${pick._id || pick.id}`} key={i} className="block brutal overflow-hidden bg-white hover:-translate-y-2 transition-all group shadow-[6px_6px_0_0_var(--ink)] hover:shadow-[10px_10px_0_0_var(--hotpink)]">
                   <div className="relative aspect-square overflow-hidden border-b-[3px] border-[var(--ink)]">
                     <img src={pick.image} alt={pick.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className="absolute right-3 top-3 flex items-center justify-center h-10 w-10 rounded-full border-[3px] border-[var(--ink)] bg-[var(--acid)] shadow-[3px_3px_0_0_var(--ink)]">

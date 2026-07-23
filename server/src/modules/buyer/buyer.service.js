@@ -1,4 +1,3 @@
-import Product from '../../models/product.model.js';
 import Bid from '../../models/bid.model.js';
 import User from '../../models/user.model.js';
 import Auction from '../../models/auction.model.js';

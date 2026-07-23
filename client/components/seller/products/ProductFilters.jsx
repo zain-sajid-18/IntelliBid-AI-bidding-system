@@ -4,7 +4,12 @@ import { Search, SlidersHorizontal } from "lucide-react";
 
 const STATUS_TABS = [
     { key: 'all',       label: 'All' },
-    { key: 'active',    label: '🟢 Live' },
+    { key: 'active',    label: '🟢 Active' },
+    { key: 'live',      label: '⚡ Live Bid' },
+    { key: 'scheduled', label: '⏰ Scheduled' },
+    { key: 'awaiting_seller_confirmation', label: '⏳ Waiting Confirm' },
+    { key: 'sale_confirmed', label: '✅ Sale Confirmed' },
+    { key: 'sale_rejected', label: '❌ Sale Rejected' },
     { key: 'draft',     label: '🟡 Drafts' },
     { key: 'ended',     label: '🔴 Ended' },
     { key: 'cancelled', label: '⚪ Cancelled' },

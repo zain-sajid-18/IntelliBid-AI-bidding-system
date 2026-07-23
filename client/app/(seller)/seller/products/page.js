@@ -95,7 +95,7 @@ export default function MyProductsPage() {
         return items;
     }, [listings, status, search, sort]);
 
-    const handleDeleted = (id) => setListings(prev => prev.filter(l => l.id !== id));
+    const handleDeleted = (id) => setListings(prev => prev.filter(l => l._id !== id && l.id !== id));
     const handleEnded = () => fetchListings();
 
     return (
@@ -145,7 +145,7 @@ export default function MyProductsPage() {
                     <motion.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {displayed.map(listing => (
                             <ProductCard
-                                key={listing.id}
+                                key={listing._id || listing.id}
                                 listing={listing}
                                 onDeleted={handleDeleted}
                                 onEnded={handleEnded}

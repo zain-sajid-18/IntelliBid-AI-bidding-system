@@ -135,6 +135,9 @@ Since the backend utilizes WebSockets (`socket.io`) and a scheduler (`node-cron`
   CLOUDINARY_CLOUD_NAME=...
   CLOUDINARY_API_KEY=...
   CLOUDINARY_API_SECRET=...
+  BREVO_API_KEY=your_brevo_key
+  BREVO_SENDER_EMAIL=no-reply@yourdomain.com
+  BREVO_SENDER_NAME=IntelliBid
   ```
 
 ---
@@ -214,6 +217,19 @@ volumes:
 3. Set up environment variables:
    - Create `server/.env` matching the schema in `server/.env.example`.
    - Create `client/.env.local` to define environment variables for the frontend.
+
+### Seeding Demo Data
+To populate the database with realistic demo data:
+```bash
+# From the server directory
+npm run seed
+```
+This creates:
+- 4 demo users (2 buyers, 2 sellers; all verified)
+- 4 demo auctions across different categories
+- Demo bids on each auction
+- User profiles for AI personalization
+- Demo accounts use password: `Password123!`
 
 ### Running Workspace Scripts
 You can boot parts of the monorepo individually or together:

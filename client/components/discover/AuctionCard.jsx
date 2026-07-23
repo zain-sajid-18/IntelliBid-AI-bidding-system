@@ -6,7 +6,8 @@ import { useWatchlistStore } from '@/store/watchlistStore';
 import { Clock, Heart, ArrowRight, Timer, Gavel, Eye } from 'lucide-react';
 
 export default function AuctionCard({ auction }) {
-    const { trackViewOnce, trackEvent } = useBehaviorTracker(auction._id);
+    const auctionId = auction?._id || auction?.id;
+    const { trackViewOnce, trackEvent } = useBehaviorTracker(auctionId);
     const { isWatched, toggleWatchlist, initialized, fetchWatchlist } = useWatchlistStore();
     const cardRef = useRef(null);
     const [timeLeft, setTimeLeft] = useState('');
@@ -62,8 +63,13 @@ export default function AuctionCard({ auction }) {
             whileHover={{ y: -8, rotate: 0.5 }}
             className="group relative flex flex-col bg-white border-[3px] border-[var(--ink)] rounded-[2rem] overflow-hidden shadow-[8px_8px_0_0_var(--ink)] hover:shadow-[12px_12px_0_0_var(--ink)] transition-all"
         >
-            {/* Status Overlay */}
-            {isUrgent && timeLeft !== 'Ended' && (
+            {/* Status Overlays */}
+            {auction.type === 'live' && (
+                <div className="absolute top-4 left-4 z-20 bg-[var(--hotpink)] text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-[2px] border-[var(--ink)] shadow-[3px_3px_0_0_var(--ink)] flex items-center gap-2 animate-pulse">
+                    <Gavel size={14} strokeWidth={3} /> Live Bidding
+                </div>
+            )}
+            {isUrgent && timeLeft !== 'Ended' && auction.type !== 'live' && (
                 <div className="absolute top-4 left-4 z-20 bg-[var(--hotpink)] text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-[2px] border-[var(--ink)] shadow-[3px_3px_0_0_var(--ink)] flex items-center gap-2 animate-pulse">
                     <Timer size={14} strokeWidth={3} /> Ending Soon
                 </div>
@@ -87,16 +93,16 @@ export default function AuctionCard({ auction }) {
                 <button
                     onClick={(e) => {
                         e.preventDefault();
-                        const currentlyWatched = isWatched(auction._id);
+                        const currentlyWatched = isWatched(auctionId);
                         trackEvent(currentlyWatched ? 'watchlist_remove' : 'watchlist_add');
-                        toggleWatchlist(auction._id);
+                        toggleWatchlist(auctionId);
                     }}
-                    className={`absolute top-4 right-4 z-20 h-11 w-11 flex items-center justify-center rounded-full border-[3px] border-[var(--ink)] shadow-[3px_3px_0_0_var(--ink)] transition-all active:scale-90 ${isWatched(auction._id)
+                    className={`absolute top-4 right-4 z-20 h-11 w-11 flex items-center justify-center rounded-full border-[3px] border-[var(--ink)] shadow-[3px_3px_0_0_var(--ink)] transition-all active:scale-90 ${isWatched(auctionId)
                             ? 'bg-[var(--hotpink)] text-white'
                             : 'bg-white text-[var(--ink)] hover:bg-[var(--hotpink)] hover:text-white'
                         }`}
                 >
-                    <Heart size={20} strokeWidth={3} className={isWatched(auction._id) ? "fill-white" : ""} />
+                    <Heart size={20} strokeWidth={3} className={isWatched(auctionId) ? "fill-white" : ""} />
                 </button>
             </div>
 
@@ -138,7 +144,7 @@ export default function AuctionCard({ auction }) {
                     </div>
 
                     <Link
-                        href={`/auction/${auction._id}`}
+                        href={`/auction/${auctionId}`}
                         onClick={() => trackEvent('item_view', { source: 'feed_click' })}
                         className="mt-4 w-full bg-[var(--electric)] text-white py-3 rounded-xl border-[2px] border-[var(--ink)] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-[var(--ink)] hover:text-[var(--acid)] transition-colors"
                     >
