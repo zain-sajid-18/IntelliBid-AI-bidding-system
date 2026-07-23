@@ -38,35 +38,40 @@ export const resolveEndedAuctions = async () => {
             const io = getIO();
 
             if (auction.bidCount > 0) {
-                // Find highest bid
-                const highestBid = await Bid.findOne({ auction: auction._id }).sort({ amount: -1 });
-                
-                if (highestBid) {
-                    auction.winner = highestBid.bidder;
+            // Find highest bid
+            const highestBid = await Bid.findOne({ auction: auction._id }).sort({ amount: -1 });
+            
+            if (highestBid) {
+                auction.winner = highestBid.bidder;
 
-                    // Mark this bid as won, and others as outbid
-                    await Bid.updateMany(
-                        { auction: auction._id, _id: { $ne: highestBid._id } },
-                        { $set: { status: 'outbid' } }
-                    );
+                // Mark this bid as won, and others as outbid
+                await Bid.updateMany(
+                    { auction: auction._id, _id: { $ne: highestBid._id } },
+                    { $set: { status: 'outbid' } }
+                );
 
-                    highestBid.status = 'won'; 
-                    await highestBid.save();
+                highestBid.status = 'won'; 
+                await highestBid.save();
 
-                    if (auction.type === 'standard') {
-                        // Standard auction: set status to ended and create order immediately
-                        auction.status = 'ended';
+                // Get buyer's shipping address
+                const buyer = await User.findById(highestBid.bidder);
+                const shippingAddress = buyer?.shippingAddress || undefined;
 
-                        // Create Order for the winner (Expires in 48 hours)
-                        const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
-                        await Order.create({
-                            auction: auction._id,
-                            buyer: highestBid.bidder,
-                            seller: auction.seller,
-                            amount: highestBid.amount,
-                            status: 'pending',
-                            expiresAt
-                        });
+                if (auction.type === 'standard') {
+                    // Standard auction: set status to ended and create order immediately
+                    auction.status = 'ended';
+
+                    // Create Order for the winner (Expires in 48 hours)
+                    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+                    await Order.create({
+                        auction: auction._id,
+                        buyer: highestBid.bidder,
+                        seller: auction.seller,
+                        amount: highestBid.amount,
+                        status: 'pending',
+                        shippingAddress,
+                        expiresAt
+                    });
 
                         // Create event for winner notification
                         await UserEvent.create({
@@ -163,23 +168,28 @@ export const processExpiredOrders = async () => {
             }).sort({ amount: -1 }).populate('bidder');
 
             if (nextHighestBid && nextHighestBid.bidder.status !== 'suspended') {
-                // Assign new winner
-                auction.winner = nextHighestBid.bidder._id;
-                await auction.save();
+                    // Assign new winner
+                    auction.winner = nextHighestBid.bidder._id;
+                    await auction.save();
 
-                nextHighestBid.status = 'winning';
-                await nextHighestBid.save();
+                    nextHighestBid.status = 'winning';
+                    await nextHighestBid.save();
 
-                // Generate new order for the fallback winner
-                const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
-                await Order.create({
-                    auction: auction._id,
-                    buyer: nextHighestBid.bidder._id,
-                    seller: auction.seller,
-                    amount: nextHighestBid.amount,
-                    status: 'pending',
-                    expiresAt
-                });
+                    // Get buyer's shipping address
+                    const fallbackBuyer = await User.findById(nextHighestBid.bidder._id);
+                    const fallbackShippingAddress = fallbackBuyer?.shippingAddress || undefined;
+
+                    // Generate new order for the fallback winner
+                    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+                    await Order.create({
+                        auction: auction._id,
+                        buyer: nextHighestBid.bidder._id,
+                        seller: auction.seller,
+                        amount: nextHighestBid.amount,
+                        status: 'pending',
+                        shippingAddress: fallbackShippingAddress,
+                        expiresAt
+                    });
 
                 // Notify new winner
                 await UserEvent.create({

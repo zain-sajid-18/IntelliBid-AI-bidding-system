@@ -64,6 +64,8 @@ export default function EditProfileForm({ user, onSaved }) {
             location = parts[1];
         }
 
+        const shippingAddress = user.shippingAddress || {};
+
         return {
             firstName: user.firstName || "",
             lastName: user.lastName || "",
@@ -75,6 +77,11 @@ export default function EditProfileForm({ user, onSaved }) {
             website: user.website || "",
             businessName: user.businessName || "",
             businessCategory: user.businessCategory || "",
+            shippingStreet: shippingAddress.street || "",
+            shippingCity: shippingAddress.city || "",
+            shippingState: shippingAddress.state || "",
+            shippingZip: shippingAddress.zip || "",
+            shippingCountry: shippingAddress.country || "",
         };
     });
 
@@ -167,7 +174,14 @@ export default function EditProfileForm({ user, onSaved }) {
         const submissionData = {
             ...form,
             phone: form.phone ? `${form.countryCode}${form.phone}` : "",
-            location: form.city && form.location ? `${form.city}, ${form.location}` : (form.location || "")
+            location: form.city && form.location ? `${form.city}, ${form.location}` : (form.location || ""),
+            shippingAddress: {
+                street: form.shippingStreet,
+                city: form.shippingCity,
+                state: form.shippingState,
+                zip: form.shippingZip,
+                country: form.shippingCountry
+            }
         };
 
         try {
@@ -357,6 +371,71 @@ export default function EditProfileForm({ user, onSaved }) {
                                                 <option value="">{loadingCities ? "Fetching cities..." : "Select City"}</option>
                                                 {cities.map((city, i) => (
                                                     <option key={`${city}-${i}`} value={city}>{city}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" size={18} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="text-xs font-black uppercase tracking-widest text-[var(--ink)]/60">Shipping Address</label>
+                                    <div className="relative">
+                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--ink)]/40">
+                                            <MapPin size={20} />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            name="shippingStreet"
+                                            value={form.shippingStreet}
+                                            onChange={handleChange}
+                                            className="w-full h-16 bg-[var(--background)] border-[3px] border-[var(--ink)] rounded-2xl pl-16 pr-6 font-bold outline-none focus:border-[var(--electric)] transition-all"
+                                            placeholder="Street Address (e.g., 123 Main St)"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                name="shippingCity"
+                                                value={form.shippingCity}
+                                                onChange={handleChange}
+                                                className="w-full h-16 bg-[var(--background)] border-[3px] border-[var(--ink)] rounded-2xl px-6 font-bold outline-none focus:border-[var(--electric)] transition-all"
+                                                placeholder="City"
+                                            />
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                name="shippingState"
+                                                value={form.shippingState}
+                                                onChange={handleChange}
+                                                className="w-full h-16 bg-[var(--background)] border-[3px] border-[var(--ink)] rounded-2xl px-6 font-bold outline-none focus:border-[var(--electric)] transition-all"
+                                                placeholder="State/Province"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                name="shippingZip"
+                                                value={form.shippingZip}
+                                                onChange={handleChange}
+                                                className="w-full h-16 bg-[var(--background)] border-[3px] border-[var(--ink)] rounded-2xl px-6 font-bold outline-none focus:border-[var(--electric)] transition-all"
+                                                placeholder="ZIP/Postal Code"
+                                            />
+                                        </div>
+                                        <div className="relative">
+                                            <select
+                                                name="shippingCountry"
+                                                value={form.shippingCountry}
+                                                onChange={handleChange}
+                                                className="w-full h-16 bg-[var(--background)] border-[3px] border-[var(--ink)] rounded-2xl px-6 font-bold appearance-none outline-none focus:border-[var(--electric)] transition-all"
+                                            >
+                                                <option value="">Select Country</option>
+                                                {countries.map((c, i) => (
+                                                    <option key={`shipping-${c.name}-${i}`} value={c.name}>{c.name}</option>
                                                 ))}
                                             </select>
                                             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" size={18} />

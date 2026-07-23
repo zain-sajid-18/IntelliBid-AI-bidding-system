@@ -71,7 +71,7 @@ export default function MyBidsPage() {
             <BidsHeader />
 
             {/* Sticky Tabs - Only the tabs will be sticky to save space and avoid hiding content */}
-            <div className="sticky top-0 z-40 bg-[var(--background)] py-4 -mx-4 px-4 md:-mx-8 md:px-8">
+            <div className="sticky top-16 z-30 bg-[var(--background)] py-4 -mx-4 px-4 md:-mx-8 md:px-8">
                 <BidsTabs />
             </div>
 

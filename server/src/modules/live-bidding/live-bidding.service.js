@@ -2,6 +2,7 @@
 import Auction from '../../models/auction.model.js';
 import Bid from '../../models/bid.model.js';
 import Order from '../../models/order.model.js';
+import User from '../../models/user.model.js';
 import UserEvent from '../../models/userEvent.model.js';
 import { getIO } from '../../config/socket.js';
 
@@ -175,6 +176,10 @@ export const confirmSaleService = async (auctionId, sellerId) => {
     // Create order
     const highestBid = await Bid.findOne({ auction: auctionId, status: 'won' });
     if (highestBid) {
+        // Get buyer's shipping address
+        const buyer = await User.findById(highestBid.bidder);
+        const shippingAddress = buyer?.shippingAddress || undefined;
+
         const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
         await Order.create({
             auction: auctionId,
@@ -182,6 +187,7 @@ export const confirmSaleService = async (auctionId, sellerId) => {
             seller: sellerId,
             amount: highestBid.amount,
             status: 'pending',
+            shippingAddress,
             expiresAt
         });
     }

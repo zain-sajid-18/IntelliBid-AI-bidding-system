@@ -65,8 +65,16 @@ export default function ForgotPassword() {
               </div>
             </div>
 
-            {error && <p className="text-red-500 text-sm font-bold">{error}</p>}
-            {message && <p className="text-green-600 text-sm font-bold bg-green-50 p-3 border-2 border-green-200 rounded-lg">{message}</p>}
+            {error && (
+              <div className="rounded-xl border-[3px] border-red-500 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+                {error}
+              </div>
+            )}
+            {message && (
+              <div className="rounded-xl border-[3px] border-[var(--ink)] bg-[var(--acid)] px-4 py-3 text-sm font-bold text-[var(--ink)]">
+                ✅ {message}
+              </div>
+            )}
 
             <button
               type="submit"

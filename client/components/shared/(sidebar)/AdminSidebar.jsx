@@ -14,8 +14,10 @@ const items = [
     { emoji: "👤", label: "Profile", color: "var(--acid)", textColor: "var(--ink)", href: "/profile" },
 ];
 
-export default function Sidebar({ role }) {
-    const [open, setOpen] = useState(false);
+export default function Sidebar({ open: propOpen, setOpen: propSetOpen }) {
+    const [internalOpen, setInternalOpen] = useState(false);
+    const open = propOpen !== undefined ? propOpen : internalOpen;
+    const setOpen = propSetOpen || setInternalOpen;
     const pathname = usePathname();
 
     return (
@@ -45,7 +47,7 @@ export default function Sidebar({ role }) {
                     </AnimatePresence>
                 </div>
 
-                <nav className="flex flex-1 flex-col gap-1 overflow-y-hidden p-2 w-full">
+                <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2 w-full">
                     {items.map((it) => {
                         const isActive = pathname === it.href || (pathname && pathname.startsWith(it.href) && it.href !== '/dashboard');
                         return (
@@ -82,6 +84,28 @@ export default function Sidebar({ role }) {
                     })}
                 </nav>
 
+                {/* Admin Mode Indicator */}
+                <div className="w-full p-2 border-b-[3px] border-[var(--ink)]">
+                    <div className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 border-[3px] border-[var(--ink)] bg-[var(--hotpink)] shadow-[2px_2px_0_0_var(--ink)]">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-[3px] border-[var(--ink)] bg-white text-xl shadow-[2px_2px_0_0_var(--ink)]">
+                            🛡️
+                        </span>
+                        <AnimatePresence>
+                            {open && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -6 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -6 }}
+                                    className="min-w-0"
+                                >
+                                    <div className="font-display text-[10px] font-black uppercase tracking-widest text-white/70">Current Mode</div>
+                                    <div className="font-display text-sm font-black uppercase tracking-wide text-white">Admin</div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
+
                 {/* Bottom area for Signout */}
                 <div className="w-full p-2 mt-auto border-t-[3px] border-[var(--ink)]">
                     <button
@@ -116,11 +140,11 @@ export default function Sidebar({ role }) {
             </aside>
 
             {/* Mobile nav */}
-            <nav className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 md:hidden">
-                <div className="flex items-center gap-2 rounded-full p-2 shadow-[var(--shadow-brutal)]" style={{ background: "color-mix(in oklab, white 80%, transparent)", backdropFilter: "blur(20px)", border: "3px solid var(--ink)" }}>
+            <nav className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 md:hidden max-w-[calc(100vw-2rem)]">
+                <div className="flex items-center gap-2 rounded-full p-2 shadow-[var(--shadow-brutal)] overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" style={{ background: "color-mix(in oklab, white 80%, transparent)", backdropFilter: "blur(20px)", border: "3px solid var(--ink)" }}>
                     {items.map((it) => (
                         <Link key={it.label} href={it.href}>
-                            <motion.span whileTap={{ scale: 0.85, rotate: -10 }} whileHover={{ y: -4 }} className="flex h-12 w-12 items-center justify-center rounded-full border-[3px] border-[var(--ink)] text-xl shadow-[2px_2px_0_0_var(--ink)] transition-all" style={{ background: it.color }} title={it.label}>
+                            <motion.span whileTap={{ scale: 0.85, rotate: -10 }} whileHover={{ y: -4 }} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-[3px] border-[var(--ink)] text-xl shadow-[2px_2px_0_0_var(--ink)] transition-all" style={{ background: it.color }} title={it.label}>
                                 {it.emoji}
                             </motion.span>
                         </Link>

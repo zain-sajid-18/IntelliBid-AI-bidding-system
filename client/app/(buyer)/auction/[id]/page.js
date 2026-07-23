@@ -65,7 +65,9 @@ export default function AuctionDetailPage() {
     if (loading) {
         return (
             <div className="flex h-screen items-center justify-center bg-[var(--background)]">
-                <Loader2 className="h-12 w-12 animate-spin text-[var(--ink)] opacity-20" />
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-[3px] border-[var(--ink)] bg-[var(--electric)] text-white shadow-[4px_4px_0_0_var(--ink)] animate-pulse">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
             </div>
         );
     }
@@ -138,16 +140,16 @@ export default function AuctionDetailPage() {
                                 )}
                             </div>
 
-                            <div className="brutal bg-white p-6 md:p-8 border-[4px] border-[var(--ink)] rounded-2xl shadow-[6px_6px_0_0_var(--ink)]">
+                            <div className="brutal p-6 md:p-8 border-[4px] border-[var(--ink)] rounded-2xl shadow-[6px_6px_0_0_var(--ink)]" style={{ background: "var(--electric)", color: "white" }}>
                                 <h3 className="font-display text-lg font-black uppercase mb-4">Description</h3>
-                                <p className="whitespace-pre-wrap font-medium opacity-80 leading-relaxed">
+                                <p className="whitespace-pre-wrap font-medium opacity-90 leading-relaxed">
                                     {auction.description || "No description provided."}
                                 </p>
                                 
                                 {auction.tags?.length > 0 && (
-                                    <div className="mt-6 flex flex-wrap gap-2 pt-6 border-t-[2px] border-[var(--ink)]/10">
+                                    <div className="mt-6 flex flex-wrap gap-2 pt-6 border-t-[2px]" style={{ borderColor: "rgba(255,255,255,0.3)" }}>
                                         {auction.tags.map(tag => (
-                                            <span key={tag} className="rounded-full border-[2px] border-[var(--ink)] bg-[var(--background)] px-3 py-1 text-xs font-bold opacity-70">
+                                            <span key={tag} className="rounded-full border-[2px] border-[var(--ink)] bg-white text-[var(--ink)] px-3 py-1 text-xs font-bold">
                                                 #{tag}
                                             </span>
                                         ))}

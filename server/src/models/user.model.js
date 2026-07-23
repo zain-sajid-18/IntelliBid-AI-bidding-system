@@ -47,6 +47,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    shippingAddress: {
+        street: String,
+        city: String,
+        state: String,
+        zip: String,
+        country: String
+    },
     avatar: {
         type: String
     },

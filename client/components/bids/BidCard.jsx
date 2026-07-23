@@ -166,15 +166,15 @@ export default function BidCard({ bid }) {
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="p-3 bg-gray-50 rounded-xl border-[2px] border-black/10">
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Your Bid</p>
-                        <p className={`font-display text-2xl font-black mt-1 ${isWinning || isWon ? 'text-[var(--ink)]' : 'text-gray-400 line-through'}`}>
+                    <div className="p-3 bg-[var(--background)] rounded-xl border-[3px] border-[var(--ink)] shadow-[2px_2px_0_0_var(--ink)]">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--ink)]/60">Your Bid</p>
+                        <p className={`font-display text-2xl font-black mt-1 ${isWinning || isWon ? 'text-[var(--ink)]' : 'text-[var(--ink)]/40 line-through'}`}>
                             ${bid.amount?.toLocaleString()}
                         </p>
                     </div>
-                    <div className="p-3 bg-[var(--background)] rounded-xl border-[2px] border-[var(--ink)] shadow-[2px_2px_0_0_var(--ink)]">
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Highest Bid</p>
-                        <p className="font-display text-2xl font-black text-[var(--electric)] mt-1 drop-shadow-[1px_1px_0_var(--ink)]">
+                    <div className="p-3 bg-white rounded-xl border-[3px] border-[var(--ink)] shadow-[2px_2px_0_0_var(--ink)]">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--ink)]/60">Highest Bid</p>
+                        <p className="font-display text-2xl font-black text-[var(--electric)] mt-1">
                             ${auction.currentPrice?.toLocaleString()}
                         </p>
                     </div>

@@ -55,16 +55,16 @@ export default function SellerCard({ seller, auctionId }) {
                 <ShieldCheck className="text-[var(--electric)] opacity-50" size={32} />
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-4">
-                <div className="bg-white rounded-lg border-[2px] border-[var(--ink)] p-2 text-center shadow-[2px_2px_0_0_var(--ink)]">
-                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Member Since</p>
-                    <p className="font-bold text-xs">{new Date(seller.createdAt).getFullYear()}</p>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-white rounded-xl border-[3px] border-[var(--ink)] p-3 text-center shadow-[3px_3px_0_0_var(--ink)]">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-[var(--ink)]/60">Member Since</p>
+                        <p className="font-bold text-sm text-[var(--ink)]">{new Date(seller.createdAt).getFullYear()}</p>
+                    </div>
+                    <div className="bg-white rounded-xl border-[3px] border-[var(--ink)] p-3 text-center shadow-[3px_3px_0_0_var(--ink)]">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-[var(--ink)]/60">Items Sold</p>
+                        <p className="font-bold text-sm text-[var(--ink)]">{seller.totalSales || 0}</p>
+                    </div>
                 </div>
-                <div className="bg-white rounded-lg border-[2px] border-[var(--ink)] p-2 text-center shadow-[2px_2px_0_0_var(--ink)]">
-                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Items Sold</p>
-                    <p className="font-bold text-xs">{seller.totalSales || 0}</p>
-                </div>
-            </div>
 
             <div className="flex gap-2">
                 {!isSelf && (

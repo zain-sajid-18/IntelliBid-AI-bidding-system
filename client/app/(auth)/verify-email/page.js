@@ -68,7 +68,11 @@ function VerifyContent() {
 export default function VerifyEmailPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--background)] p-6 grain">
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-[3px] border-[var(--ink)] bg-[var(--electric)] text-white shadow-[4px_4px_0_0_var(--ink)] animate-pulse">
+          <div className="h-6 w-6 rounded-full bg-white/60" />
+        </div>
+      }>
         <VerifyContent />
       </Suspense>
     </div>

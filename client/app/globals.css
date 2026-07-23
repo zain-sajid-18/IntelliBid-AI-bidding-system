@@ -76,6 +76,12 @@
 .dark {
   --background: oklch(0.16 0.01 270);
   --foreground: oklch(0.98 0 0);
+  --ink: oklch(0.98 0 0);
+  --card: oklch(0.22 0.01 270);
+  --card-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.3 0.01 270);
+  --muted: oklch(0.25 0.01 270);
+  --muted-foreground: oklch(0.7 0.01 270);
 }
 
 @layer base {
@@ -84,6 +90,11 @@
     background-color: var(--color-background); 
     color: var(--color-foreground); 
     font-family: var(--font-body); 
+    height: 100%;
+    overflow-x: hidden;
+  }
+  body {
+    min-height: 100vh;
   }
   h1,h2,h3,h4 { 
     font-family: var(--font-display); 

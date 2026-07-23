@@ -53,6 +53,11 @@ export const updateProfileService = async (userId, updateData) => {
         }
     });
 
+    // Handle shipping address
+    if (updateData.shippingAddress) {
+        filteredUpdate.shippingAddress = updateData.shippingAddress;
+    }
+
     const user = await User.findByIdAndUpdate(
         userId,
         { $set: filteredUpdate },

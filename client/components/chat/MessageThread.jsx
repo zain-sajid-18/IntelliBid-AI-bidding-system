@@ -74,10 +74,15 @@ export default function MessageThread() {
                         <Loader2 className="animate-spin" size={32} />
                     </div>
                 ) : threadMessages.length === 0 ? (
-                    <div className="text-center opacity-50 mt-10 text-sm font-medium">
-                        {isSeller
-                            ? 'No messages yet. The buyer will reach out shortly.'
-                            : 'No messages yet. Send a message to start the conversation!'}
+                    <div className="flex flex-col items-center justify-center mt-10 text-center">
+                        <div className="brutal bg-white p-8 rounded-2xl max-w-sm">
+                            <div className="text-4xl mb-3">💬</div>
+                            <p className="font-display text-sm font-black uppercase tracking-wide text-[var(--ink)]/60">
+                                {isSeller
+                                    ? 'No messages yet. The buyer will reach out shortly.'
+                                    : 'No messages yet. Send a message to start the conversation!'}
+                            </p>
+                        </div>
                     </div>
                 ) : (
                     threadMessages.map(msg => (

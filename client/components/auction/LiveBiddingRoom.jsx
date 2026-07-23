@@ -208,8 +208,8 @@ export default function LiveBiddingRoom() {
     const isFull = participantCount >= maxParticipants;
 
     return (
-        <div className="brutal bg-[var(--electric)] text-white p-6 md:p-8 flex flex-col items-center text-center">
-            <h3 className="font-display text-sm font-black uppercase tracking-widest text-white/70 mb-2">
+        <div className="brutal bg-[var(--electric)] text-black p-6 md:p-8 flex flex-col items-center text-center">
+            <h3 className="font-display text-sm font-black uppercase tracking-widest opacity-70 mb-2">
                 Live Bidding Room
             </h3>
 
@@ -222,11 +222,11 @@ export default function LiveBiddingRoom() {
                 </span>
             </div>
 
-            <p className="text-sm font-bold text-white/80 mb-4 flex items-center gap-2">
+            <p className="text-sm font-bold opacity-80 mb-4 flex items-center gap-2">
                 <Users className="h-4 w-4" /> {participantCount}/{maxParticipants} Active
             </p>
 
-            <p className="text-sm font-bold text-white/80 mb-6 flex items-center gap-2">
+            <p className="text-sm font-bold opacity-80 mb-6 flex items-center gap-2">
                 <Clock className="h-4 w-4" /> {timeLeft}
             </p>
 
@@ -340,7 +340,7 @@ export default function LiveBiddingRoom() {
                                     <Gavel className="h-6 w-6" strokeWidth={3} />
                                     Place Bid
                                 </button>
-                                <p className="text-xs font-bold text-white/60">
+                                <p className="text-xs font-bold opacity-60">
                                     Minimum next bid: ${minBid.toLocaleString()}
                                 </p>
                             </form>
