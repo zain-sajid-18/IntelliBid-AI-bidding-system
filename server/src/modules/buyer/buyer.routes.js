@@ -12,7 +12,8 @@ import {
     getMyOrders,
     depositFunds,
     sandboxDepositSuccess,
-    completeOrder
+    completeOrder,
+    refundOrder
 } from './buyer.controller.js';
 
 const router = express.Router();
@@ -29,6 +30,7 @@ router.get('/activity', getRecentActivity);
 router.get('/ai-picks', getAiPicks);
 router.get('/orders', getMyOrders);
 router.post('/orders/:orderId/complete', completeOrder);
+router.post('/orders/:orderId/refund', refundOrder);
 
 // Wallet
 router.post('/wallet/deposit', depositFunds);

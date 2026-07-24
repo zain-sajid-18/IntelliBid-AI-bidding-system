@@ -402,12 +402,48 @@ export const completeOrderService = async (orderId, buyerId) => {
     order.status = 'completed';
     await order.save();
     
+    // Pay seller from escrow
+    await User.findByIdAndUpdate(order.seller, {
+        $inc: { walletBalance: order.sellerPayout }
+    });
+    
     // Create user event for seller notification
     await UserEvent.create({
         userId: order.seller,
         eventType: 'order_completed',
         auctionId: order.auction,
-        context: `The buyer has marked the item as received. Order completed!`
+        context: `The buyer has marked the item as received. $${order.sellerPayout} has been credited to your wallet!`
+    });
+    
+    return order;
+};
+
+export const refundOrderService = async (orderId, buyerId, reason) => {
+    const order = await Order.findOne({ _id: orderId, buyer: buyerId });
+    if (!order) throw new Error('Order not found or you are not the buyer');
+    if (order.status !== 'shipped') throw new Error('Refunds are only available for shipped orders');
+    
+    order.status = 'refunded';
+    await order.save();
+    
+    // Refund buyer (full amount, minus platform fee? Or full? Let's do full amount for now)
+    await User.findByIdAndUpdate(buyerId, {
+        $inc: { walletBalance: order.amount }
+    });
+    
+    // Create user events for both buyer and seller
+    await UserEvent.create({
+        userId: buyerId,
+        eventType: 'order_refunded',
+        auctionId: order.auction,
+        context: `Your order has been refunded $${order.amount} for reason: ${reason}`
+    });
+    
+    await UserEvent.create({
+        userId: order.seller,
+        eventType: 'order_refunded',
+        auctionId: order.auction,
+        context: `The order has been refunded to the buyer for reason: ${reason}`
     });
     
     return order;

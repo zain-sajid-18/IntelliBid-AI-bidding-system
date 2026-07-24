@@ -95,12 +95,7 @@ export const handleStripeWebhook = asyncHandler(async (req, res) => {
                         sellerPayout
                     });
 
-                    // Credit seller's wallet balance
-                    await User.findByIdAndUpdate(order.seller, {
-                        $inc: { walletBalance: sellerPayout }
-                    });
-
-                    console.log(`Payment confirmed for Order ${orderId}. Credited $${sellerPayout} to Seller ${order.seller}`);
+                    console.log(`Payment confirmed for Order ${orderId}. Funds held in escrow for Seller ${order.seller}`);
                 }
             }
         }
@@ -110,30 +105,37 @@ export const handleStripeWebhook = asyncHandler(async (req, res) => {
 });
 
 export const sandboxSuccess = asyncHandler(async (req, res) => {
-    const { orderId } = req.body;
+    const { orderId, shippingAddress } = req.body;
+    const userId = req.user._id;
 
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
     if (order.status === 'pending') {
+        // Validate shipping address
+        if (!shippingAddress || !shippingAddress.street || !shippingAddress.city || !shippingAddress.state || !shippingAddress.zip || !shippingAddress.country) {
+            return res.status(400).json({ success: false, message: 'Please provide a complete shipping address' });
+        }
+
         const platformFeeRate = 0.05; // 5%
         const amount = order.amount;
         const platformFee = amount * platformFeeRate;
         const sellerPayout = amount - platformFee;
 
-        // Mark order as paid
+        // Mark order as paid and save shipping address (hold funds in escrow)
         order.status = 'paid';
         order.paymentDate = new Date();
         order.platformFee = platformFee;
         order.sellerPayout = sellerPayout;
+        order.shippingAddress = shippingAddress;
         await order.save();
 
-        // Credit seller's wallet balance
-        await User.findByIdAndUpdate(order.seller, {
-            $inc: { walletBalance: sellerPayout }
+        // Update user's shipping address in profile
+        await User.findByIdAndUpdate(userId, {
+            shippingAddress: shippingAddress
         });
 
-        console.log(`[Sandbox] Payment success: Order ${orderId} marked paid. Payout of $${sellerPayout} credited to Seller ${order.seller}`);
+        console.log(`[Sandbox] Payment success: Order ${orderId} marked paid. Funds held in escrow for Seller ${order.seller}`);
     }
 
     res.status(200).json({ success: true, message: 'Sandbox payment processed successfully' });

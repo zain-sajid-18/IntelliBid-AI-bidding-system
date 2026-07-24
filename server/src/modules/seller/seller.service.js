@@ -1,13 +1,14 @@
 import Auction from '../../models/auction.model.js';
 import Bid from '../../models/bid.model.js';
 import Order from '../../models/order.model.js';
+import User from '../../models/user.model.js';
 import UserEvent from '../../models/userEvent.model.js';
 import mongoose from 'mongoose';
 
 export const getSellerStatsService = async (sellerId) => {
-    // 1. Total Revenue (sum of seller payouts from PAID or COMPLETED orders)
+    // 1. Total Revenue (sum of seller payouts from COMPLETED orders only - since we hold funds in escrow until then)
     const revenueAggregation = await Order.aggregate([
-        { $match: { seller: new mongoose.Types.ObjectId(sellerId), status: { $in: ['paid', 'shipped', 'completed'] } } },
+        { $match: { seller: new mongoose.Types.ObjectId(sellerId), status: 'completed' } },
         { $group: { _id: null, total: { $sum: "$sellerPayout" } } }
     ]);
     const totalRevenue = revenueAggregation.length > 0 ? revenueAggregation[0].total : 0;
@@ -187,6 +188,10 @@ export const acceptEarlyService = async (auctionId, sellerId) => {
     highestBid.status = 'won';
     await highestBid.save();
 
+    // Get buyer's shipping address
+    const buyer = await User.findById(highestBid.bidder);
+    const shippingAddress = buyer?.shippingAddress || undefined;
+
     // Create Order for winner (Expires in 48 hours)
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
     await Order.create({
@@ -195,6 +200,7 @@ export const acceptEarlyService = async (auctionId, sellerId) => {
         seller: sellerId,
         amount: highestBid.amount,
         status: 'pending',
+        shippingAddress,
         expiresAt
     });
 
