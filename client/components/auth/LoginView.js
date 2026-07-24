@@ -37,14 +37,18 @@ export default function LoginView() {
     if (validationError) { setError(validationError); return; }
     setLoading(true);
     try {
-      const data = await api("/api/auth/login", {
+      await api("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      setUser(data.user);
-      const roleRoutes = { buyer: "/dashboard", seller: "/seller/dashboard", admin: "/admin/dashboard" };
-      router.push(roleRoutes[data.user.role] || "/dashboard");
+      // Double-check by fetching /me to ensure we have correct role
+      const meData = await api("/api/auth/me");
+      if (meData && meData.user) {
+        setUser(meData.user);
+        const roleRoutes = { buyer: "/dashboard", seller: "/seller/dashboard", admin: "/admin/dashboard" };
+        router.push(roleRoutes[meData.user.role] || "/dashboard");
+      }
     } catch (err) {
       setError(err?.message || "Login failed");
     } finally {
@@ -55,13 +59,17 @@ export default function LoginView() {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       setLoading(true);
-      const data = await api("/api/auth/google", {
+      await api("/api/auth/google", {
         method: "POST",
         body: JSON.stringify({ idToken: credentialResponse.credential }),
       });
-      setUser(data.user);
-      const roleRoutes = { buyer: "/dashboard", seller: "/seller/dashboard", admin: "/admin/dashboard" };
-      router.push(roleRoutes[data.user.role] || "/dashboard");
+      // Double-check by fetching /me to ensure we have correct role
+      const meData = await api("/api/auth/me");
+      if (meData && meData.user) {
+        setUser(meData.user);
+        const roleRoutes = { buyer: "/dashboard", seller: "/seller/dashboard", admin: "/admin/dashboard" };
+        router.push(roleRoutes[meData.user.role] || "/dashboard");
+      }
     } catch (err) {
       setError(err.message || "Google login failed");
     } finally {

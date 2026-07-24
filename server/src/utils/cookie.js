@@ -1,4 +1,3 @@
-//cookie utility
 const isProduction = process.env.NODE_ENV === 'production';
 
 export const sendTokenCookie = (res, token) => {
@@ -8,4 +7,4 @@ export const sendTokenCookie = (res, token) => {
         sameSite: isProduction ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-};
+};

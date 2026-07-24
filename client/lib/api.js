@@ -42,10 +42,35 @@ export const api = async (endpoint, options = {}) => {
         data = JSON.parse(text);
     } catch (err) {
         console.error(`[API Error] Failed to parse JSON from ${endpoint}. Body:`, text);
+        if (res.status === 401) {
+            // If unauthorized, clear stored token and redirect to login
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('token');
+                // Avoid infinite redirect if we're already on login/register
+                const currentPath = window.location.pathname;
+                if (!currentPath.startsWith('/login') && !currentPath.startsWith('/register') && !currentPath.startsWith('/forgot-password') && !currentPath.startsWith('/reset-password')) {
+                    window.location.href = '/login';
+                }
+            }
+            throw new Error('Please log in to continue');
+        }
         throw new Error('Invalid server response');
     }
 
-    if (!res.ok) throw new Error(data.message || 'Request failed');
+    if (!res.ok) {
+        // If 401 unauthorized, clear token and redirect to login
+        if (res.status === 401) {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('token');
+                const currentPath = window.location.pathname;
+                if (!currentPath.startsWith('/login') && !currentPath.startsWith('/register') && !currentPath.startsWith('/forgot-password') && !currentPath.startsWith('/reset-password')) {
+                    window.location.href = '/login';
+                }
+            }
+            throw new Error(data.message || 'Please log in to continue');
+        }
+        throw new Error(data.message || 'Request failed');
+    }
 
     // Automatically store token on login / signup / social auth / upgrade
     if (data && data.token && typeof window !== 'undefined') {

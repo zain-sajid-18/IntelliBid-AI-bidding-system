@@ -19,23 +19,30 @@ export const signupService = async (data) => {
     const emailToken = generateVerificationToken();
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
+    // Determine user role: only INITIAL_ADMIN_EMAIL becomes admin, otherwise use provided role (buyer/seller only)
+    const isInitialAdmin = process.env.INITIAL_ADMIN_EMAIL && 
+        data.email.toLowerCase() === process.env.INITIAL_ADMIN_EMAIL.toLowerCase();
+    const userRole = isInitialAdmin ? 'admin' : (data.role === 'admin' ? 'buyer' : data.role); // Never allow random admin signups!
+
     // Create user in DB
     const user = await User.create({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         password: hashedPassword,
-        role: data.role,
-        isVerified: process.env.BYPASS_EMAIL_VERIFICATION === 'true',
-        emailVerificationToken: emailToken,
-        emailVerificationExpires: expires,
+        role: userRole,
+        isVerified: process.env.BYPASS_EMAIL_VERIFICATION === 'true' || isInitialAdmin, // Admin bypasses email verification
+        emailVerificationToken: isInitialAdmin ? undefined : emailToken, // Admin doesn't need verification token
+        emailVerificationExpires: isInitialAdmin ? undefined : expires,
     });
 
-    // Send verification email
-    try {
-        await sendVerificationEmail(user.email, emailToken);
-    } catch (error) {
-        console.error("Failed to send verification email:", error.message);
+    // Send verification email only if not admin and not bypassing verification
+    if (!isInitialAdmin && process.env.BYPASS_EMAIL_VERIFICATION !== 'true') {
+        try {
+            await sendVerificationEmail(user.email, emailToken);
+        } catch (error) {
+            console.error("Failed to send verification email:", error.message);
+        }
     }
 
     // Generate JWT
@@ -52,8 +59,17 @@ export const loginService = async (data) => {
         throw new ApiError(401, 'Invalid email or password');
     }
 
-    // Check verification
-    if (!user.isVerified && process.env.BYPASS_EMAIL_VERIFICATION !== 'true') {
+    // Auto-upgrade to admin if email matches INITIAL_ADMIN_EMAIL
+    const isInitialAdmin = process.env.INITIAL_ADMIN_EMAIL && 
+        user.email.toLowerCase() === process.env.INITIAL_ADMIN_EMAIL.toLowerCase();
+    if (isInitialAdmin && user.role !== 'admin') {
+        user.role = 'admin';
+        user.isVerified = true; // Admin is always verified
+        await user.save();
+    }
+
+    // Check verification (admin always bypasses)
+    if (!user.isVerified && process.env.BYPASS_EMAIL_VERIFICATION !== 'true' && !isInitialAdmin) {
         throw new ApiError(401, 'Please verify your email before logging in');
     }
 
@@ -103,14 +119,31 @@ export const googleLoginService = async (idToken) => {
 
     if (!user) {
         // Create new user if not found (Social Login)
+        const isInitialAdmin = process.env.INITIAL_ADMIN_EMAIL && 
+            email.toLowerCase() === process.env.INITIAL_ADMIN_EMAIL.toLowerCase();
         user = await User.create({
             firstName: given_name,
             lastName: family_name,
             email,
             password: Math.random().toString(36).slice(-10), // Random password for social accounts
             isVerified: true, // Google accounts are pre-verified
-            role: 'buyer', // Default role for new social users
+            role: isInitialAdmin ? 'admin' : 'buyer', // Only admin email becomes admin
         });
+    } else {
+        // Existing user: auto-upgrade to admin if email matches
+        const isInitialAdmin = process.env.INITIAL_ADMIN_EMAIL && 
+            email.toLowerCase() === process.env.INITIAL_ADMIN_EMAIL.toLowerCase();
+        if (isInitialAdmin && user.role !== 'admin') {
+            user.role = 'admin';
+            user.isVerified = true;
+            await user.save();
+        } else {
+            // Ensure verified (Google confirmed email), but KEEP existing role!
+            if (!user.isVerified) {
+                user.isVerified = true;
+                await user.save();
+            }
+        }
     }
 
     const token = generateToken(user);
