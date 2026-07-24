@@ -85,7 +85,11 @@ function BuyerDashboardContent() {
   const handleDeposit = async (e) => {
     e.preventDefault();
     if (!depositAmount || Number(depositAmount) < 5) {
-      alert("Minimum deposit is $5");
+      if (typeof window !== 'undefined' && window.toast) {
+        window.toast.warning("Minimum deposit is $5");
+      } else {
+        alert("Minimum deposit is $5");
+      }
       return;
     }
     setDepositLoading(true);
@@ -97,11 +101,7 @@ function BuyerDashboardContent() {
       });
       if (res.success && res.url) {
         window.location.href = res.url;
-      } else {
-        alert("Failed to create deposit checkout session.");
       }
-    } catch (err) {
-      alert(err.message || "Failed to initiate deposit");
     } finally {
       setDepositLoading(false);
     }
@@ -273,38 +273,88 @@ function BuyerDashboardContent() {
           </div>
         </div>
 
-        {/* Deposit Modal */}
+        {/* Deposit Modal - FIXED centered modal (better UX for mobile, users don't miss it!) */}
         <AnimatePresence>
           {depositOpen && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-8 overflow-hidden"
-            >
-              <div className="brutal bg-white p-6 md:p-8">
-                <h3 className="font-display text-2xl font-black mb-4">Add Funds to Wallet</h3>
-                <form onSubmit={handleDeposit} className="flex flex-col md:flex-row gap-4">
-                  <input 
-                    type="number" 
-                    placeholder="Amount (USD, min $5)" 
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    required
-                    min="5"
+            <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 sm:p-6">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => !depositLoading && setDepositOpen(false)}
+                className="absolute inset-0 bg-[var(--ink)]/70 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="relative w-full max-w-xl brutal bg-white p-6 sm:p-8 shadow-[12px_12px_0_0_var(--electric)]"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-[var(--electric)] rounded-xl border-[3px] border-[var(--ink)] shadow-[3px_3px_0_0_var(--ink)]">
+                      <Wallet size={24} className="text-white" strokeWidth={2.5} />
+                    </div>
+                    <h3 className="font-display text-2xl font-black">Add Funds to Wallet</h3>
+                  </div>
+                  <button
+                    onClick={() => !depositLoading && setDepositOpen(false)}
                     disabled={depositLoading}
-                    className="flex-1 rounded-xl border-[3px] border-[var(--ink)] bg-[var(--background)] px-6 py-4 font-display text-xl font-bold focus:bg-white focus:outline-none focus:ring-4 focus:ring-[var(--electric)]/30" 
-                  />
+                    className="h-12 w-12 shrink-0 rounded-xl border-[3px] border-[var(--ink)] bg-white text-xl font-black shadow-[2px_2px_0_0_var(--ink)] transition-all hover:bg-[var(--hotpink)] hover:text-white active:scale-95 disabled:opacity-50"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Quick amount buttons (mobile-friendly) */}
+                <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[5, 25, 50, 100].map(amount => (
+                    <button
+                      key={amount}
+                      type="button"
+                      onClick={() => setDepositAmount(String(amount))}
+                      disabled={depositLoading}
+                      className={`rounded-xl border-[3px] border-[var(--ink)] px-4 py-3 font-display font-black uppercase transition-all active:scale-95 disabled:opacity-50 ${depositAmount === String(amount) ? "bg-[var(--acid)] shadow-[3px_3px_0_0_var(--ink)]" : "bg-[var(--background)] shadow-[2px_2px_0_0_var(--ink)] hover:bg-white"}`}
+                    >
+                      ${amount}
+                    </button>
+                  ))}
+                </div>
+
+                <form onSubmit={handleDeposit} className="space-y-4">
+                  <div>
+                    <label className="font-display text-xs font-black uppercase tracking-widest mb-2 block opacity-60">
+                      Amount (USD) - Minimum $5
+                    </label>
+                    <input 
+                      type="number" 
+                      placeholder="Enter custom amount" 
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      required
+                      min="5"
+                      step="1"
+                      disabled={depositLoading}
+                      className="w-full rounded-xl border-[3px] border-[var(--ink)] bg-[var(--background)] px-6 py-4 font-display text-2xl font-bold focus:bg-white focus:outline-none focus:ring-4 focus:ring-[var(--electric)]/30" 
+                    />
+                  </div>
                   <button 
                     type="submit"
                     disabled={depositLoading}
-                    className="rounded-xl border-[3px] border-[var(--ink)] bg-[var(--ink)] px-8 py-4 font-display text-lg font-black uppercase text-white shadow-[4px_4px_0_0_var(--hotpink)] transition-transform hover:-translate-y-1 disabled:opacity-50"
+                    className="w-full rounded-xl border-[3px] border-[var(--ink)] bg-[var(--ink)] px-8 py-4 font-display text-lg font-black uppercase text-white shadow-[4px_4px_0_0_var(--electric)] transition-transform hover:-translate-y-1 disabled:opacity-50 disabled:translate-y-0 flex items-center justify-center gap-3"
                   >
-                    {depositLoading ? "Redirecting..." : "Proceed to Payment"}
+                    {depositLoading ? (
+                      <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Redirecting to Payment...</>
+                    ) : (
+                      <>Proceed to Payment <ArrowUpRight className="h-5 w-5" /></>
+                    )}
                   </button>
+                  <p className="text-center text-xs font-bold opacity-60">
+                    Your funds are securely processed and held in your IntelliBid wallet.
+                  </p>
                 </form>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
 

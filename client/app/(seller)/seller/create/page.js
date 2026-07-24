@@ -146,8 +146,8 @@ export default function CreateListingPage() {
                         </motion.div>
                     )}
 
-                    {/* Navigation */}
-                    <div className="mt-6 flex items-center justify-between">
+                    {/* Desktop Navigation */}
+                    <div className="mt-6 hidden md:flex items-center justify-between">
                         <button
                             onClick={step === 0 ? () => router.push('/seller/dashboard') : prevStep}
                             className="flex items-center gap-2 rounded-xl border-[3px] border-[var(--ink)] bg-white px-6 py-3 font-display text-sm font-black uppercase shadow-[3px_3px_0_0_var(--ink)] transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_var(--ink)]"
@@ -177,6 +177,40 @@ export default function CreateListingPage() {
                                 <>Next <ArrowRight className="h-4 w-4" strokeWidth={3} /></>
                             )}
                         </button>
+                    </div>
+
+                    {/* Mobile Navigation - FIXED STICKY BAR AT BOTTOM (never covered!) */}
+                    <div className="md:hidden fixed left-0 right-0 bottom-0 z-40 border-t-[3px] border-[var(--ink)] bg-white/95 backdrop-blur-md shadow-[0_-6px_0_0_var(--ink)]">
+                        <div className="p-3 pb-20 max-w-4xl mx-auto flex items-center gap-3">
+                            <button
+                                onClick={step === 0 ? () => router.push('/seller/dashboard') : prevStep}
+                                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl border-[3px] border-[var(--ink)] bg-white font-display text-xs font-black uppercase shadow-[2px_2px_0_0_var(--ink)] transition-all active:scale-95"
+                            >
+                                <ArrowLeft className="h-4 w-4 shrink-0" strokeWidth={3} />
+                                <span>{step === 0 ? 'Cancel' : 'Back'}</span>
+                            </button>
+
+                            <div className="hidden sm:flex items-center gap-1.5 px-2">
+                                {[0, 1, 2].map(i => (
+                                    <div key={i} className={`h-2.5 rounded-full border-[2px] border-[var(--ink)] transition-all ${i === step ? 'w-6 bg-[var(--electric)]' : i < step ? 'w-2.5 bg-[var(--acid)]' : 'w-2.5 bg-white'}`} />
+                                ))}
+                            </div>
+
+                            <button
+                                disabled={!canProceed || submitting}
+                                onClick={handleNext}
+                                className={`flex h-14 flex-[1.5] items-center justify-center gap-2 rounded-xl border-[3px] border-[var(--ink)] px-3 font-display text-xs font-black uppercase shadow-[3px_3px_0_0_var(--ink)] transition-all active:scale-95
+                                    ${canProceed ? 'bg-[var(--hotpink)] text-white' : 'bg-[var(--ink)]/20 text-[var(--ink)]/40 cursor-not-allowed'}`}
+                            >
+                                {submitting ? (
+                                    <><Loader2 className="h-4 w-4 shrink-0 animate-spin" /><span>Publishing…</span></>
+                                ) : step === 2 ? (
+                                    <>🚀 <span>Publish Listing</span></>
+                                ) : (
+                                    <><span>Next</span> <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={3} /></>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

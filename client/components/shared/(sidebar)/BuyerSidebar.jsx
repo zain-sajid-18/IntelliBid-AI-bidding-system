@@ -139,6 +139,22 @@ export default function BuyerSidebar({ open: propOpen, setOpen: propSetOpen }) {
                             </motion.span>
                         </Link>
                     ))}
+                    {/* Logout button for mobile */}
+                    <button
+                        onClick={async () => {
+                            try {
+                                const { api } = await import("@/lib/api");
+                                await api('/api/auth/logout', { method: 'POST' });
+                            } catch (e) { }
+                            const { useAuthStore } = await import("@/store/authStore");
+                            useAuthStore.getState().clearUser();
+                            window.location.href = '/';
+                        }}
+                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-[3px] border-[var(--ink)] text-xl shadow-[2px_2px_0_0_var(--ink)] transition-all active:scale-85 bg-[var(--hotpink)] text-white"
+                        title="Sign Out"
+                    >
+                        🚪
+                    </button>
                 </div>
             </nav>
         </>

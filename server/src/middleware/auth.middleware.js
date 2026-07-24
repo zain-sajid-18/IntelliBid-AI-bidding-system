@@ -17,11 +17,11 @@ export const auth = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
         // Check if user is still active in DB
-        const user = await User.findById(decoded.id).select('status');
-        if (!user || user.status === 'suspended' || user.status === 'banned') {
+        const user = await User.findById(decoded.id).select('status isDeleted');
+        if (!user || user.status === 'suspended' || user.status === 'banned' || user.isDeleted) {
             return res.status(403).json({ 
                 success: false, 
-                message: `Account is ${user?.status || 'inactive'}. Access denied.` 
+                message: `Account is ${user?.isDeleted ? 'deleted' : user?.status || 'inactive'}. Access denied.` 
                 
             });
         }

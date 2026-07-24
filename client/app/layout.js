@@ -2,7 +2,7 @@ import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
 import GoogleProvider from "@/components/providers/GoogleProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
-import SellerSidebar from "@/components/shared/(sidebar)/SellerSidebar";
+import ToastContainer from "@/components/shared/ToastContainer";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-display",
@@ -26,6 +26,8 @@ export default function RootLayout({ children }) {
         <GoogleProvider>
           <AuthProvider>
             {children}
+            {/* Toast notifications - global! */}
+            <ToastContainer />
           </AuthProvider>
         </GoogleProvider>
       </body>

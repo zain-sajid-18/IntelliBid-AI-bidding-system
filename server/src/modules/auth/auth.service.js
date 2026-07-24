@@ -80,9 +80,12 @@ export const loginService = async (data) => {
         throw new ApiError(401, 'Invalid email or password');
     }
 
-    // Check account status (Banned/Suspended)
+    // Check account status (Banned/Suspended/Deleted)
     if (user.status === 'suspended' || user.status === 'banned') {
         throw new ApiError(403, `Your account is ${user.status}. Please contact support.`);
+    }
+    if (user.isDeleted) {
+        throw new ApiError(403, 'Your account has been deleted.');
     }
 
     // Generate JWT
