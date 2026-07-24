@@ -12,7 +12,11 @@ export const signupSchema = z.object({
         .email('Invalid email format')
         .refine(val => val.toLowerCase().endsWith('@gmail.com'), 'Only @gmail.com emails are allowed'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(8, 'Confirm password must be at least 8 characters'),
     role: z.enum(['buyer', 'seller', 'admin']).default('buyer'),
+}).refine(data => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
 });
 
 export const loginSchema = z.object({

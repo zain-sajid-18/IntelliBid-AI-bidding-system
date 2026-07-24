@@ -3,15 +3,17 @@
 import { useAuthStore } from "@/store/authStore";
 import BuyerSidebar from "@/components/shared/(sidebar)/BuyerSidebar";
 import SellerSidebar from "@/components/shared/(sidebar)/SellerSidebar";
+import AdminSidebar from "@/components/shared/(sidebar)/AdminSidebar";
 import { LiquidCursor } from "@/components/shared/LiquidCursor";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
-export default function ProfileLayout({ children }) {
+export default function HybridLayout({ children }) {
     const { user, viewMode, checkAuth } = useAuthStore();
     const router = useRouter();
-    const isSellerRole = user?.role === 'seller';
+    const isSeller = user?.role === 'seller';
+    const isAdmin = user?.role === 'admin';
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
 
@@ -39,10 +41,12 @@ export default function ProfileLayout({ children }) {
             setCheckingAuth(false);
         }
     }, [user, checkAuth, router]);
-    
-    // Default to BuyerSidebar, use SellerSidebar if in seller mode
+
+    // Decide sidebar based on user role and current viewMode
     let Sidebar = BuyerSidebar;
-    if (isSellerRole && viewMode === 'seller') Sidebar = SellerSidebar;
+    if (isAdmin) Sidebar = AdminSidebar;
+    else if (isSeller && viewMode === 'seller') Sidebar = SellerSidebar;
+    else if (isSeller && viewMode === 'buyer') Sidebar = BuyerSidebar;
 
     if (checkingAuth) {
         return (

@@ -18,12 +18,14 @@ export default function Signup() {
     lastName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     role: "buyer",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateEmail = (email) => {
     return String(email)
@@ -58,6 +60,14 @@ export default function Signup() {
       setError("Please enter a valid Gmail address (ending in @gmail.com)");
       return;
     }
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
 
     setLoading(true);
 
@@ -67,7 +77,24 @@ export default function Signup() {
         body: JSON.stringify(form),
       });
 
-      setUser(data.user);
+      // Try to verify if user is actually logged in (bypass email verification case)
+      try {
+        const meData = await api("/api/auth/me");
+        if (meData && meData.user && meData.user.role) {
+          setUser(meData.user);
+          const roleRoutes = {
+            buyer: "/dashboard",
+            seller: "/seller/dashboard",
+            admin: "/admin/dashboard",
+          };
+          router.push(roleRoutes[meData.user.role] || "/dashboard");
+          return;
+        }
+      } catch (_) {
+        // If /me fails, email verification is required; proceed to redirect to login
+      }
+
+      // If we get here, user needs to verify email first; send them to login page
       setIsSubmitted(true);
     } catch (err) {
       setError(err.message);
@@ -300,7 +327,6 @@ export default function Signup() {
                     strokeWidth={2.5}
                   />
                 </div>
-                {/* ✅ FIX 7: wired to state + minLength matches hint */}
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
@@ -322,6 +348,41 @@ export default function Signup() {
               </div>
               <p className="text-xs text-[var(--ink)]/60 font-medium">
                 Must be at least 8 characters long.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="font-display text-sm font-bold uppercase tracking-wide">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                  <Lock
+                    className="h-5 w-5 text-[var(--ink)]/50"
+                    strokeWidth={2.5}
+                  />
+                </div>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={form.confirmPassword}
+                  onChange={(e) =>
+                    setForm({ ...form, confirmPassword: e.target.value })
+                  }
+                  minLength={8}
+                  className="w-full rounded-xl border-[3px] border-[var(--ink)] bg-[var(--background)] px-12 py-3 font-medium transition-colors focus:bg-white focus:outline-none focus:ring-4 focus:ring-[var(--electric)]/30"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-3 opacity-50 hover:opacity-100 transition-opacity"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              <p className="text-xs text-[var(--ink)]/60 font-medium">
+                Re-enter your password to confirm.
               </p>
             </div>
 
