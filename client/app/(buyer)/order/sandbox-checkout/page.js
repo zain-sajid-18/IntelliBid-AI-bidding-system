@@ -4,13 +4,15 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { motion } from 'framer-motion';
-import { ShieldCheck, CreditCard, Loader2, AlertCircle, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, CreditCard, Loader2, AlertCircle, ShoppingBag, ArrowLeft, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { useAuthStore } from '@/store/authStore';
 
 function SandboxCheckoutContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const orderId = searchParams.get('orderId');
+    const { user } = useAuthStore();
 
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -22,6 +24,17 @@ function SandboxCheckoutContent() {
         expiry: '12/29',
         cvc: '•••',
         name: 'Test Buyer'
+    });
+
+    const [address, setAddress] = useState(() => {
+        const userAddress = user?.shippingAddress || {};
+        return {
+            street: userAddress.street || '',
+            city: userAddress.city || '',
+            state: userAddress.state || '',
+            zip: userAddress.zip || '',
+            country: userAddress.country || ''
+        };
     });
 
     useEffect(() => {
@@ -52,22 +65,35 @@ function SandboxCheckoutContent() {
         fetchOrder();
     }, [orderId]);
 
+    const handleAddressChange = (e) => {
+        const { name, value } = e.target;
+        setAddress(prev => ({ ...prev, [name]: value }));
+        if (error) setError('');
+    };
+
     const handlePay = async (e) => {
         e.preventDefault();
         setProcessing(true);
         setError('');
 
+        // Validate address
+        if (!address.street || !address.city || !address.state || !address.zip || !address.country) {
+            setError('Please fill in all shipping address fields');
+            setProcessing(false);
+            return;
+        }
+
         try {
             const res = await api('/api/payments/sandbox-success', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId })
+                body: JSON.stringify({ orderId, shippingAddress: address })
             });
 
             if (res.success) {
                 router.push('/order/success');
             } else {
-                setError('Payment processing failed');
+                setError(res.message || 'Payment processing failed');
                 setProcessing(false);
             }
         } catch (err) {
@@ -115,6 +141,71 @@ function SandboxCheckoutContent() {
                         <p className="text-sm font-medium opacity-60 mb-6">You are in a sandboxed staging environment. No real funds will be charged.</p>
 
                         <form onSubmit={handlePay} className="space-y-6">
+                            <div className="space-y-4">
+                                <label className="text-xs font-black uppercase tracking-widest opacity-50">Shipping Address</label>
+                                <div className="brutal bg-[var(--background)] border-[3px] border-[var(--ink)] p-4 rounded-xl space-y-4">
+                                    <div className="relative">
+                                        <MapPin size={20} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50" />
+                                        <input 
+                                            type="text" 
+                                            name="street"
+                                            value={address.street} 
+                                            onChange={handleAddressChange}
+                                            placeholder="Street Address (e.g., 123 Main St)"
+                                            className="bg-transparent font-bold text-lg outline-none w-full pl-12 py-2"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase opacity-40">City</label>
+                                            <input 
+                                                type="text" 
+                                                name="city"
+                                                value={address.city} 
+                                                onChange={handleAddressChange}
+                                                className="bg-transparent font-bold outline-none w-full mt-1"
+                                                placeholder="City"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase opacity-40">State/Province</label>
+                                            <input 
+                                                type="text" 
+                                                name="state"
+                                                value={address.state} 
+                                                onChange={handleAddressChange}
+                                                className="bg-transparent font-bold outline-none w-full mt-1"
+                                                placeholder="State"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase opacity-40">ZIP/Postal Code</label>
+                                            <input 
+                                                type="text" 
+                                                name="zip"
+                                                value={address.zip} 
+                                                onChange={handleAddressChange}
+                                                className="bg-transparent font-bold outline-none w-full mt-1"
+                                                placeholder="ZIP Code"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase opacity-40">Country</label>
+                                            <input 
+                                                type="text" 
+                                                name="country"
+                                                value={address.country} 
+                                                onChange={handleAddressChange}
+                                                className="bg-transparent font-bold outline-none w-full mt-1"
+                                                placeholder="Country"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="space-y-4">
                                 <label className="text-xs font-black uppercase tracking-widest opacity-50">Card Information</label>
                                 

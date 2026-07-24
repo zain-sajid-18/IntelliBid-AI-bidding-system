@@ -57,50 +57,25 @@ export const resolveEndedAuctions = async () => {
                 const buyer = await User.findById(highestBid.bidder);
                 const shippingAddress = buyer?.shippingAddress || undefined;
 
-                if (auction.type === 'standard') {
-                    // Standard auction: set status to ended and create order immediately
-                    auction.status = 'ended';
+                // Both standard and live auctions go through awaiting_seller_confirmation first!
+                auction.status = 'awaiting_seller_confirmation';
 
-                    // Create Order for the winner (Expires in 48 hours)
-                    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
-                    await Order.create({
-                        auction: auction._id,
-                        buyer: highestBid.bidder,
-                        seller: auction.seller,
-                        amount: highestBid.amount,
-                        status: 'pending',
-                        shippingAddress,
-                        expiresAt
-                    });
+                // Notify winner
+                await UserEvent.create({
+                    userId: auction.winner,
+                    eventType: 'auction_won',
+                    auctionId: auction._id,
+                    context: `You won the ${auction.type === 'live' ? 'live ' : ''}auction for ${auction.title} with a bid of $${highestBid.amount}! Waiting for seller to confirm the sale.`
+                });
 
-                        // Create event for winner notification
-                        await UserEvent.create({
-                            userId: highestBid.bidder,
-                            eventType: 'auction_won',
-                            auctionId: auction._id,
-                            context: `You won the auction for ${auction.title} with a bid of $${highestBid.amount}! Payment is due within 48 hours.`
-                        });
-                    } else {
-                        // Live auction: set status to awaiting_seller_confirmation first, send notification to seller and winner
-                        auction.status = 'awaiting_seller_confirmation';
-
-                        // Notify winner
-                        await UserEvent.create({
-                            userId: auction.winner,
-                            eventType: 'auction_won',
-                            auctionId: auction._id,
-                            context: `You won the live auction for ${auction.title} with a bid of $${highestBid.amount}! Waiting for seller to confirm the sale.`
-                        });
-
-                        // Notify seller via socket
-                        io.to(`user:${auction.seller}`).emit('notification:new', {
-                            type: 'live_auction_ended',
-                            title: 'Live Auction Ended',
-                            body: `Your live auction for "${auction.title}" has ended. The winning bid is $${highestBid.amount}! Review the bid and confirm or reject the sale.`,
-                            auctionId: auction._id,
-                            timestamp: new Date().toISOString()
-                        });
-                    }
+                // Notify seller via socket
+                io.to(`user:${auction.seller}`).emit('notification:new', {
+                    type: auction.type === 'live' ? 'live_auction_ended' : 'standard_auction_ended',
+                    title: auction.type === 'live' ? 'Live Auction Ended' : 'Auction Ended',
+                    body: `Your ${auction.type === 'live' ? 'live ' : ''}auction for "${auction.title}" has ended. The winning bid is $${highestBid.amount}! Review the bid and confirm or reject the sale.`,
+                    auctionId: auction._id,
+                    timestamp: new Date().toISOString()
+                });
 
                     io.to(`auction:${auction._id}`).emit('live:roomEnded', {
                         auctionId: auction._id,

@@ -7,7 +7,9 @@ import {
     getRecommendationsService,
     getRecentActivityService,
     toggleWatchlistService,
-    getWatchlistService
+    getWatchlistService,
+    completeOrderService,
+    refundOrderService
 } from './buyer.service.js';
 
 export const getBuyerStats = asyncHandler(async (req, res) => {
@@ -139,7 +141,14 @@ export const getMyOrders = asyncHandler(async (req, res) => {
 
 export const completeOrder = asyncHandler(async (req, res) => {
     const { orderId } = req.params;
-    const { completeOrderService } = await import('./buyer.service.js');
     const order = await completeOrderService(orderId, req.user.id);
     res.status(200).json({ success: true, message: 'Order marked as completed', data: order });
+});
+
+export const refundOrder = asyncHandler(async (req, res) => {
+    const { orderId } = req.params;
+    const { reason } = req.body;
+    if (!reason) return res.status(400).json({ success: false, message: 'Refund reason is required' });
+    const order = await refundOrderService(orderId, req.user.id, reason);
+    res.status(200).json({ success: true, message: 'Order refunded successfully', data: order });
 });
