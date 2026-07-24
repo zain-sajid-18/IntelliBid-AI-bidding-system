@@ -63,7 +63,7 @@ export default function ChatLayout({ children }) {
             <LiquidCursor />
             <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
-            <div className={`flex-1 transition-[margin] duration-300 ease-out min-w-0 ${sidebarOpen ? "md:ml-64" : "md:ml-20"}`}>
+            <div className={`flex-1 transition-[margin] duration-300 ease-out min-w-0 pb-28 md:pb-4 ${sidebarOpen ? "md:ml-64" : "md:ml-20"}`}>
                 {children}
             </div>
         </div>

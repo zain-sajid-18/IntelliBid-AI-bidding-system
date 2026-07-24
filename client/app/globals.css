@@ -86,6 +86,10 @@
 
 @layer base {
   * { border-color: var(--color-border); }
+  html { 
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem; /* Space for sticky topbars when jumping to anchor links */
+  }
   html, body { 
     background-color: var(--color-background); 
     color: var(--color-foreground); 
@@ -95,10 +99,74 @@
   }
   body {
     min-height: 100vh;
+    /* Prevent iOS text resizing, improve mobile touch targets */
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    /* Safe area for mobile notches, dynamic islands, home indicators */
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    /* Better font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  /* Beautiful text selection */
+  ::selection {
+    background: var(--acid);
+    color: var(--ink);
+  }
+  /* Custom scrollbar (visible, branded, brutalist, not tiny) */
+  ::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--background);
+    border-left: 3px solid var(--ink);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--electric);
+    border: 3px solid var(--ink);
+    border-radius: 6px;
+    transition: background 0.2s;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--hotpink);
+  }
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thick;
+    scrollbar-color: var(--electric) var(--background);
+  }
+  /* Larger tap targets for mobile (44x44px minimum as per Apple HIG) */
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Beautiful focus rings (accessibility + style!) */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--electric) 40%, transparent), 
+                4px 4px 0 0 var(--ink);
+    border-radius: 0.75rem;
   }
   h1,h2,h3,h4 { 
     font-family: var(--font-display); 
     letter-spacing: -0.02em; 
+  }
+  /* Improve image loading */
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+  /* Subtle interactive element micro-interactions */
+  button, a {
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, background-color 0.15s;
+  }
+  button:active, a:active {
+    transform: translateY(2px) scale(0.98);
   }
 }
 
@@ -140,3 +208,38 @@
 
 @keyframes blob { 0%,100% { border-radius: 42% 58% 70% 30% / 45% 35% 65% 55%; } 50% { border-radius: 60% 40% 30% 70% / 55% 60% 40% 45%; } }
 .animate-blob { animation: blob 12s ease-in-out infinite; }
+
+/* Senior UX: Skeleton shimmer for loading states (use with .animate-skeleton) */
+@keyframes skeleton { 
+  0% { background-position: -400px 0; } 
+  100% { background-position: 400px 0; } 
+}
+.animate-skeleton {
+  background: linear-gradient(90deg, 
+    var(--muted) 0%, 
+    color-mix(in oklab, var(--muted) 40%, var(--background)) 50%, 
+    var(--muted) 100%
+  );
+  background-size: 800px 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+  border-radius: 0.75rem;
+}
+
+/* Senior UX: Page-in animation for content elements (apply to section wrappers) */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-page-in { animation: pageIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Senior UX: Reduced motion support (a11y) — disable non-critical animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

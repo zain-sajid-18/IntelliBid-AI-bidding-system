@@ -1,8 +1,25 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
+// Helper to safely call toast even before hydration
+const fireToast = (type, message, extra = {}) => {
+    if (typeof window === 'undefined') return;
+    if (window.toast && window.toast[type]) {
+        window.toast[type](message, extra);
+    } else {
+        // Fallback: try importing store
+        import('@/store/toastStore').then(m => {
+            const store = m.useToastStore.getState();
+            if (store && store[type]) store[type](message, extra);
+        }).catch(() => {});
+    }
+};
+
 export const api = async (endpoint, options = {}) => {
     const isFormData = options.body instanceof FormData;
     const isGetRequest = !options.method || options.method.toUpperCase() === 'GET';
+    const method = (options.method || 'GET').toUpperCase();
+    const shouldShowSuccess = options.showSuccess === true || (!isGetRequest && options.showSuccess !== false && method !== 'DELETE');
+    const shouldShowError = options.showError !== false;
     
     // Retrieve token from localStorage (if running in client browser context)
     let token = null;
@@ -49,11 +66,13 @@ export const api = async (endpoint, options = {}) => {
                 // Avoid infinite redirect if we're already on login/register
                 const currentPath = window.location.pathname;
                 if (!currentPath.startsWith('/login') && !currentPath.startsWith('/register') && !currentPath.startsWith('/forgot-password') && !currentPath.startsWith('/reset-password')) {
-                    window.location.href = '/login';
+                    fireToast('warning', 'Please log in to continue');
+                    setTimeout(() => { window.location.href = '/login'; }, 800);
                 }
             }
             throw new Error('Please log in to continue');
         }
+        if (shouldShowError) fireToast('error', 'Invalid server response');
         throw new Error('Invalid server response');
     }
 
@@ -64,10 +83,14 @@ export const api = async (endpoint, options = {}) => {
                 localStorage.removeItem('token');
                 const currentPath = window.location.pathname;
                 if (!currentPath.startsWith('/login') && !currentPath.startsWith('/register') && !currentPath.startsWith('/forgot-password') && !currentPath.startsWith('/reset-password')) {
-                    window.location.href = '/login';
+                    fireToast('warning', data.message || 'Please log in to continue');
+                    setTimeout(() => { window.location.href = '/login'; }, 800);
                 }
             }
             throw new Error(data.message || 'Please log in to continue');
+        }
+        if (shouldShowError) {
+            fireToast('error', data.message || 'Request failed');
         }
         throw new Error(data.message || 'Request failed');
     }
@@ -80,6 +103,15 @@ export const api = async (endpoint, options = {}) => {
     // Automatically clear token on logout
     if (endpoint === '/api/auth/logout' && typeof window !== 'undefined') {
         localStorage.removeItem('token');
+        fireToast('info', 'Signed out successfully');
+    }
+
+    // Auto-success toast for mutations (POST/PUT/PATCH)
+    if (shouldShowSuccess && data && data.success && !isGetRequest) {
+        // Don't duplicate if data has a custom success message already; use it
+        const msg = data.message || 'Done!';
+        if (method === 'DELETE') fireToast('info', msg);
+        else fireToast('success', msg);
     }
 
     return data;

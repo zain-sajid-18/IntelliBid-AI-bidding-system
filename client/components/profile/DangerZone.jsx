@@ -12,18 +12,33 @@ export default function DangerZone() {
     const router = useRouter();
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [confirmText, setConfirmText] = useState("");
+    const [error, setError] = useState("");
 
     const handleDelete = async () => {
+        if (confirmText !== "DELETE") {
+            setError("Type DELETE to confirm account deletion");
+            return;
+        }
+        setError("");
         setLoading(true);
         try {
             await api("/api/profile/delete-account", { method: "DELETE" });
             logout();
-            router.push("/");
+            // Clear everything client-side
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "/";
         } catch (error) {
-            alert("Failed to delete account. Please contact support.");
+            setError(error.message || "Failed to delete account. Please try again or contact support.");
             setLoading(false);
-            setShowModal(false);
         }
+    };
+
+    const openModal = () => {
+        setShowModal(true);
+        setConfirmText("");
+        setError("");
     };
 
     return (
@@ -47,7 +62,7 @@ export default function DangerZone() {
                 </div>
                 
                 <button 
-                    onClick={() => setShowModal(true)}
+                    onClick={openModal}
                     className="shrink-0 bg-white text-[var(--hotpink)] border-[3px] border-[var(--hotpink)] px-8 py-3.5 rounded-xl font-black uppercase tracking-widest text-sm shadow-[4px_4px_0_0_var(--hotpink)] hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--hotpink)] transition-all flex items-center gap-2"
                 >
                     <Trash2 size={16} strokeWidth={3} /> Delete Account
@@ -78,12 +93,34 @@ export default function DangerZone() {
                             <h3 className="font-display text-2xl font-black uppercase tracking-tighter mb-4 text-center">
                                 Final Warning
                             </h3>
-                            <div className="font-bold text-sm mb-8 leading-relaxed text-center space-y-4">
+                            <div className="font-bold text-sm mb-6 leading-relaxed text-center space-y-4">
                                 <p>Are you absolutely sure you want to delete your IntelliBid account?</p>
                                 <p className="text-[var(--hotpink)] px-4 py-3 bg-[var(--hotpink)]/10 rounded-xl border-[2px] border-[var(--hotpink)]">
-                                    All your data, active listings, and bids will be permanently erased.
+                                    All your data, active listings, and bids will be permanently erased. This cannot be undone!
                                 </p>
                             </div>
+
+                            {/* Confirm Text Input */}
+                            <div className="mb-5">
+                                <label className="font-display text-xs font-black uppercase tracking-widest mb-2 block">
+                                    Type <span className="text-[var(--hotpink)] px-2 py-1 bg-[var(--hotpink)]/10 rounded-lg mx-1">DELETE</span> to confirm
+                                </label>
+                                <input
+                                    type="text"
+                                    value={confirmText}
+                                    onChange={(e) => setConfirmText(e.target.value)}
+                                    placeholder="DELETE"
+                                    className="w-full px-4 py-3 rounded-xl border-[3px] border-[var(--ink)] bg-white font-bold text-sm focus:outline-none focus:ring-4 focus:ring-[var(--hotpink)]/30 transition-all"
+                                    disabled={loading}
+                                    autoFocus
+                                />
+                            </div>
+
+                            {error && (
+                                <div className="mb-5 px-4 py-3 rounded-xl border-[3px] border-[var(--hotpink)] bg-[var(--hotpink)]/10 font-bold text-xs text-[var(--hotpink)]">
+                                    {error}
+                                </div>
+                            )}
                             
                             <div className="flex flex-col-reverse sm:flex-row gap-3">
                                 <button 
@@ -95,8 +132,8 @@ export default function DangerZone() {
                                 </button>
                                 <button 
                                     onClick={handleDelete}
-                                    disabled={loading}
-                                    className="flex-1 bg-[var(--hotpink)] text-white border-[3px] border-[var(--ink)] py-3.5 rounded-xl font-black uppercase tracking-widest text-xs shadow-[4px_4px_0_0_var(--ink)] hover:-translate-y-1 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:translate-y-0"
+                                    disabled={loading || confirmText !== "DELETE"}
+                                    className="flex-1 bg-[var(--hotpink)] text-white border-[3px] border-[var(--ink)] py-3.5 rounded-xl font-black uppercase tracking-widest text-xs shadow-[4px_4px_0_0_var(--ink)] hover:-translate-y-1 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-[4px_4px_0_0_var(--ink)]"
                                 >
                                     {loading ? (
                                         <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Deleting...</span>
